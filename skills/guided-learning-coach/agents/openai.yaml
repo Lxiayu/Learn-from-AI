@@ -1,0 +1,4 @@
+interface:
+  display_name: "Guided Learning Coach"
+  short_description: "Plan guided study sessions with questioning and spaced review"
+  default_prompt: "Help me learn a topic through a staged route, guided explanations, Socratic questions, and spaced review tasks."
