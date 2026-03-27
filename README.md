@@ -1,6 +1,6 @@
 # Guided Learning Coach Skill
 
-一个用于 Trae IDE 的引导式学习教练技能，通过苏格拉底式提问、间隔复习和主动学习策略帮助你系统掌握概念性知识。
+一个用于 AI IDE / openclaw 的引导式学习教练技能，通过苏格拉底式提问、间隔复习和主动学习策略帮助你系统掌握概念性知识。
 
 ## 功能特点
 
@@ -23,7 +23,7 @@
 
 ## 安装方法
 
-### 方法一：手动安装
+### 方法一：Trae手动安装
 
 1. 将 `skills/guided-learning-coach` 目录复制到你的项目：
 
@@ -37,6 +37,8 @@ cp -r skills/guided-learning-coach .trae/skills/
 ### 方法二：直接使用
 
 如果你已经克隆了这个仓库，skill 已经在 `.trae/skills/guided-learning-coach/` 目录下，可以直接使用。
+
+你也可以使用其他AI代理，只需要修改配置文件即可。
 
 ## 使用方法
 
