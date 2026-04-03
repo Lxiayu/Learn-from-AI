@@ -1,1 +1,4 @@
 /.trae
+/.worktrees/
+.DS_Store
+.pytest_cache/
