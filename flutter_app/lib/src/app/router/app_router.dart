@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/home/presentation/home_screen.dart';
 import '../../features/navigation/presentation/app_shell.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -17,10 +18,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/home',
           builder: (BuildContext context, GoRouterState state) {
-            return const _TabPlaceholder(
-              title: 'Home',
-              body: 'Today',
-            );
+            return const HomeScreen();
           },
         ),
         GoRoute(
