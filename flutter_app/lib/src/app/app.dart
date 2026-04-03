@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'router/app_router.dart';
+import 'theme/app_theme.dart';
 
 class LearnAiApp extends StatelessWidget {
   const LearnAiApp({super.key});
@@ -11,10 +12,7 @@ class LearnAiApp extends StatelessWidget {
       title: 'LearnAI',
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF24389C)),
-        useMaterial3: true,
-      ),
+      theme: buildAppTheme(),
     );
   }
 }
