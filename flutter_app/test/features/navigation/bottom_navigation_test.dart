@@ -13,22 +13,22 @@ void main() {
 
     await tester.tap(find.text('Roadmap'));
     await tester.pumpAndSettle();
-    expect(find.text('Mastering Digital Architecture'), findsOneWidget);
+    expect(find.text('Current stage goal'), findsOneWidget);
 
     await tester.tap(find.text('Review'));
     await tester.pumpAndSettle();
-    expect(find.text('Active Topics'), findsOneWidget);
+    expect(find.text('Due today'), findsOneWidget);
 
     await tester.tap(find.text('Chat'));
     await tester.pumpAndSettle();
-    expect(find.text('The Essence of Justice'), findsOneWidget);
+    expect(find.text('Current task'), findsOneWidget);
 
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
-    expect(find.text('Alex Harrison'), findsOneWidget);
+    expect(find.text('Reminder time'), findsOneWidget);
 
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
-    expect(find.text('Daily Learning Goal'), findsOneWidget);
+    expect(find.text('Today loop'), findsOneWidget);
   });
 }

@@ -28,11 +28,42 @@ void main() {
 
     expect(theme.colorScheme.primary, const Color(0xFF24389C));
     expect(theme.scaffoldBackgroundColor, const Color(0xFFFBF9F9));
-    expect(theme.textTheme.displayLarge?.fontSize, 56);
+    expect(theme.textTheme.displayLarge?.fontSize, 48);
     expect(theme.textTheme.displayLarge?.fontWeight, FontWeight.w700);
     expect(
       theme.bottomNavigationBarTheme.selectedItemColor,
       const Color(0xFF24389C),
     );
+  });
+
+  testWidgets('can switch interface language to Chinese from settings', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('中文'));
+    await tester.tap(find.text('中文'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('学习策展人'), findsOneWidget);
+    expect(find.text('首页'), findsWidgets);
+    expect(find.text('个人看板'), findsOneWidget);
+  });
+
+  testWidgets('header actions show visible feedback instead of no-op', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.byIcon(Icons.notifications_none_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('Notifications will appear here soon.'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('Quick filters will live here soon.'), findsOneWidget);
   });
 }

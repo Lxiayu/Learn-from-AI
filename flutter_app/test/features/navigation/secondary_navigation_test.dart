@@ -4,6 +4,27 @@ import 'package:flutter_app/main.dart';
 import 'package:flutter_app/src/app/router/app_router.dart';
 
 void main() {
+  testWidgets('home primary actions open chat and review flows', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    appRouter.go('/home');
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Continue current learning'));
+    await tester.tap(find.text('Continue current learning'));
+    await tester.pumpAndSettle();
+    expect(find.text('Current task'), findsOneWidget);
+
+    appRouter.go('/home');
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Switch to review first'));
+    await tester.tap(find.text('Switch to review first'));
+    await tester.pumpAndSettle();
+    expect(find.text('Due today'), findsOneWidget);
+  });
+
   testWidgets('chat secondary screens can be opened from the primary page', (
     WidgetTester tester,
   ) async {
@@ -66,5 +87,23 @@ void main() {
     await tester.tap(find.text('Weekly Cognitive Report'));
     await tester.pumpAndSettle();
     expect(find.text('Mastery Velocity'), findsOneWidget);
+  });
+
+  testWidgets('language change persists when navigating back to home', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    appRouter.go('/profile');
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('中文'));
+    await tester.tap(find.text('中文'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('首页'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('今日任务台'), findsOneWidget);
+    expect(find.text('主线后再探索'), findsOneWidget);
   });
 }

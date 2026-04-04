@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/locale/app_copy.dart';
 import '../../../app/theme/app_colors.dart';
 import 'app_bottom_nav.dart';
 
@@ -23,6 +24,8 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppCopy copy = context.copy;
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       extendBody: true,
@@ -41,7 +44,13 @@ class AppShell extends StatelessWidget {
           bottom: false,
           child: Column(
             children: [
-              const _ShellHeader(),
+              _ShellHeader(
+                title: copy.t(en: 'The Curator', zh: '学习策展人'),
+                subtitle: copy.t(
+                  en: 'A guided studio for thoughtful learning',
+                  zh: '一个以提问驱动思考的学习工作台',
+                ),
+              ),
               Expanded(child: child),
             ],
           ),
@@ -70,7 +79,13 @@ class AppShell extends StatelessWidget {
 }
 
 class _ShellHeader extends StatelessWidget {
-  const _ShellHeader();
+  const _ShellHeader({
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String title;
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -109,9 +124,9 @@ class _ShellHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('The Curator', style: textTheme.titleLarge),
+                Text(title, style: textTheme.titleLarge),
                 Text(
-                  'A guided studio for thoughtful learning',
+                  subtitle,
                   style: textTheme.bodySmall,
                 ),
               ],
@@ -119,12 +134,42 @@ class _ShellHeader extends StatelessWidget {
           ),
           _HeaderIconButton(
             icon: Icons.notifications_none_rounded,
-            onPressed: () {},
+            onPressed: () {
+              final ScaffoldMessengerState messenger =
+                  ScaffoldMessenger.of(context);
+              messenger
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppCopy.of(context).t(
+                      en: 'Notifications will appear here soon.',
+                      zh: '通知中心很快会出现在这里。',
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(width: 8),
           _HeaderIconButton(
             icon: Icons.tune_rounded,
-            onPressed: () {},
+            onPressed: () {
+              final ScaffoldMessengerState messenger =
+                  ScaffoldMessenger.of(context);
+              messenger
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppCopy.of(context).t(
+                      en: 'Quick filters will live here soon.',
+                      zh: '快捷筛选很快会补到这里。',
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

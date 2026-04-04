@@ -8,6 +8,6 @@ void main() {
 
     expect(find.text('Home'), findsWidgets);
     expect(find.text('Good Morning, Alex!'), findsOneWidget);
-    expect(find.text('Current Focus'), findsOneWidget);
+    expect(find.text('Today loop'), findsOneWidget);
   });
 }
