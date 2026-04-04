@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/chat/presentation/chat_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/navigation/presentation/app_shell.dart';
+import '../../features/profile/presentation/profile_analytics_screen.dart';
+import '../../features/review/presentation/review_screen.dart';
+import '../../features/roadmap/presentation/roadmap_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/home',
@@ -24,62 +28,28 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/roadmap',
           builder: (BuildContext context, GoRouterState state) {
-            return const _TabPlaceholder(
-              title: 'Roadmap',
-              body: 'Current roadmap overview',
-            );
+            return const RoadmapScreen();
           },
         ),
         GoRoute(
           path: '/review',
           builder: (BuildContext context, GoRouterState state) {
-            return const _TabPlaceholder(
-              title: 'Review',
-              body: 'Today review queue',
-            );
+            return const ReviewScreen();
           },
         ),
         GoRoute(
           path: '/chat',
           builder: (BuildContext context, GoRouterState state) {
-            return const _TabPlaceholder(
-              title: 'Socratic Chat',
-              body: 'Current topic',
-            );
+            return const ChatScreen();
           },
         ),
         GoRoute(
           path: '/profile',
           builder: (BuildContext context, GoRouterState state) {
-            return const _TabPlaceholder(
-              title: 'Profile & Analytics',
-              body: 'Learning summary',
-            );
+            return const ProfileAnalyticsScreen();
           },
         ),
       ],
     ),
   ],
 );
-
-class _TabPlaceholder extends StatelessWidget {
-  const _TabPlaceholder({
-    required this.title,
-    required this.body,
-  });
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
-      body: Center(
-        child: Text(body),
-      ),
-    );
-  }
-}
