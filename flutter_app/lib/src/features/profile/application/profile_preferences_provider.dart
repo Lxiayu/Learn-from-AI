@@ -25,6 +25,10 @@ class ProfilePreferencesNotifier extends StateNotifier<ProfilePreferencesState> 
     state = state.copyWith(digestDay: day);
   }
 
+  void setDailyTargetMinutes(int minutes) {
+    state = state.copyWith(dailyTargetMinutes: minutes);
+  }
+
   void toggleOfflineReady() {
     state = state.copyWith(offlineReady: !state.offlineReady);
   }

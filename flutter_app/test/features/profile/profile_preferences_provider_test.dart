@@ -12,9 +12,11 @@ void main() {
     final notifier = container.read(profilePreferencesProvider.notifier);
     notifier.setLanguage(AppLanguage.chinese);
     notifier.setReminderHour(20);
+    notifier.setDailyTargetMinutes(40);
 
     final state = container.read(profilePreferencesProvider);
     expect(state.language, AppLanguage.chinese);
     expect(state.reminderHour, 20);
+    expect(state.dailyTargetMinutes, 40);
   });
 }
