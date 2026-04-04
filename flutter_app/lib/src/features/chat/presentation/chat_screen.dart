@@ -14,42 +14,107 @@ class ChatScreen extends StatelessWidget {
     final TextTheme textTheme = Theme.of(context).textTheme;
 
     return AppScaffoldShell(
-      title: 'Socratic Chat',
       children: [
-        Text('Current Topic', style: textTheme.displayLarge),
-        const SizedBox(height: 8),
-        Text(
-          'Binary search, boundary conditions, and how to explain the invariant in your own words.',
-          style: textTheme.bodyLarge,
-        ),
-        const SizedBox(height: 24),
-        const SectionCard(
-          title: 'AI Prompt',
-          subtitle: 'Explain before you optimize',
-          trailing: ProgressBadge(label: 'Question 3 of 6'),
-          child: _PromptPanel(),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated,
+            borderRadius: BorderRadius.circular(34),
+            border: Border.all(color: AppColors.outlineSoft),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.shadow,
+                blurRadius: 22,
+                offset: Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const ProgressBadge(label: 'Current Inquiry'),
+                const SizedBox(height: 16),
+                Text(
+                  'The Essence of Justice',
+                  style: textTheme.displayLarge?.copyWith(fontSize: 34),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Move from intuition to articulation: define justice, contrast it with obedience, and test the idea against a hard case.',
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: const LinearProgressIndicator(
+                          value: 0.55,
+                          minHeight: 9,
+                          backgroundColor: AppColors.surfaceContainerHigh,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text('Question 3 / 5', style: textTheme.labelMedium),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         SectionCard(
-          title: 'Response Workspace',
-          subtitle: 'Use your own words, then compare with a concrete example.',
-          trailing: const ProgressBadge(label: 'Active'),
+          title: 'Dialogue Canvas',
+          subtitle: 'Follow the prompt ladder from explanation to transfer.',
+          trailing: const ProgressBadge(label: 'Socratic mode'),
+          child: Column(
+            children: const [
+              _ChatBubble(
+                speaker: 'Socrates',
+                message:
+                    'Before we speak of justice, tell me this: is every lawful act also just, or have you seen moments where the two separate?',
+                accent: AppColors.surfaceWarm,
+                alignEnd: false,
+              ),
+              SizedBox(height: 12),
+              _ChatBubble(
+                speaker: 'You',
+                message:
+                    'I think justice is deeper than rules, because rules can be used without wisdom or fairness.',
+                accent: AppColors.surfaceBlue,
+                alignEnd: true,
+              ),
+              SizedBox(height: 12),
+              _ChatBubble(
+                speaker: 'Socrates',
+                message:
+                    'Good. Now give me a concrete example where obedience feels insufficient, and we will test your definition against it.',
+                accent: AppColors.surfaceRose,
+                alignEnd: false,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SectionCard(
+          title: 'Shape Your Answer',
+          subtitle: 'Respond in your own words, then refine after the next prompt.',
+          trailing: const ProgressBadge(label: 'Active response'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
+              const TextField(
                 minLines: 5,
                 maxLines: 7,
                 decoration: InputDecoration(
                   hintText:
-                      'Try describing why the search interval keeps shrinking...',
-                  filled: true,
-                  fillColor: AppColors.surfaceContainerLow,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.all(18),
+                      'Describe justice in your own words, then add one example where fairness and law pull apart...',
                 ),
               ),
               const SizedBox(height: 16),
@@ -57,7 +122,7 @@ class ChatScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: PrimaryActionButton(
-                      label: 'Submit Response',
+                      label: 'Send Reflection',
                       onPressed: () {},
                     ),
                   ),
@@ -67,79 +132,99 @@ class ChatScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        SectionCard(
-          title: 'Learning Controls',
-          subtitle: 'Use the AI tools that support this round.',
-          trailing: const ProgressBadge(label: 'Ready'),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _SecondaryPillButton(
-                label: 'Focus Mode',
-                onPressed: () {},
-              ),
-              _SecondaryPillButton(
-                label: 'Multimodal Input',
-                onPressed: () {},
-              ),
-              _SecondaryPillButton(
-                label: 'Ask for Hint',
-                onPressed: () {},
-              ),
-            ],
-          ),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: const [
+            _ActionChip(label: 'Ask for a hint', icon: Icons.lightbulb_outline),
+            _ActionChip(label: 'Request a counterexample', icon: Icons.compare_arrows_rounded),
+            _ActionChip(label: 'Switch to focus mode', icon: Icons.center_focus_strong_rounded),
+          ],
         ),
       ],
     );
   }
 }
 
-class _PromptPanel extends StatelessWidget {
-  const _PromptPanel();
+class _ChatBubble extends StatelessWidget {
+  const _ChatBubble({
+    required this.speaker,
+    required this.message,
+    required this.accent,
+    required this.alignEnd,
+  });
+
+  final String speaker;
+  final String message;
+  final Color accent;
+  final bool alignEnd;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme textTheme = Theme.of(context).textTheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'If a binary search implementation skips the target at the edges, what invariant is most likely broken?',
-          style: textTheme.bodyLarge,
+    return Align(
+      alignment: alignEnd ? Alignment.centerRight : Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: accent,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.outlineSoft),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  speaker,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(message, style: textTheme.bodyMedium),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Think about the meaning of the left and right pointers after each iteration.',
-          style: textTheme.bodyMedium,
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _SecondaryPillButton extends StatelessWidget {
-  const _SecondaryPillButton({
+class _ActionChip extends StatelessWidget {
+  const _ActionChip({
     required this.label,
-    required this.onPressed,
+    required this.icon,
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primary,
-        side: BorderSide.none,
-        backgroundColor: AppColors.surfaceContainer,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        shape: const StadiumBorder(),
+    final TextTheme textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.outlineSoft),
       ),
-      child: Text(label),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: AppColors.primary),
+            const SizedBox(width: 8),
+            Text(label, style: textTheme.labelMedium),
+          ],
+        ),
+      ),
     );
   }
 }

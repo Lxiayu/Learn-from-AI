@@ -7,6 +7,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
 
     expect(find.text('Home'), findsWidgets);
-    expect(find.text('Today'), findsOneWidget);
+    expect(find.text('Good Morning, Alex!'), findsOneWidget);
+    expect(find.text('Current Focus'), findsOneWidget);
   });
 }

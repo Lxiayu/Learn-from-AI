@@ -25,6 +25,20 @@ abstract final class AppTextStyles {
         height: 1.15,
         color: AppColors.onSurface,
       ),
+      headlineSmall: TextStyle(
+        fontFamily: 'Manrope',
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        color: AppColors.onSurface,
+      ),
+      titleLarge: TextStyle(
+        fontFamily: 'Manrope',
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        color: AppColors.onSurface,
+      ),
       titleMedium: TextStyle(
         fontFamily: 'Inter',
         fontSize: 18,
@@ -52,6 +66,13 @@ abstract final class AppTextStyles {
         fontWeight: FontWeight.w600,
         height: 1.2,
         color: AppColors.onSurfaceVariant,
+      ),
+      labelLarge: TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        height: 1.25,
+        color: AppColors.onSurface,
       ),
     ).apply(
       bodyColor: AppColors.onSurface,

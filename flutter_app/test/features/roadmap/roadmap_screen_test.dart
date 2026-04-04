@@ -5,7 +5,7 @@ import 'package:flutter_app/src/app/theme/app_theme.dart';
 import 'package:flutter_app/src/features/roadmap/presentation/roadmap_screen.dart';
 
 void main() {
-  testWidgets('Roadmap shows stages and start-learning action', (
+  testWidgets('Roadmap matches the stitched journey layout', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -15,7 +15,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Current Roadmap'), findsOneWidget);
-    expect(find.text('Start This Node'), findsOneWidget);
+    expect(find.text('Your Journey'), findsOneWidget);
+    expect(find.text('Mastering Digital Architecture'), findsOneWidget);
+    expect(find.text('CONTINUE LEARNING'), findsOneWidget);
   });
 }

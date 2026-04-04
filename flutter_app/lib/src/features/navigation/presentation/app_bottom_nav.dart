@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/theme/app_colors.dart';
+
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -22,12 +24,12 @@ class AppBottomNav extends StatelessWidget {
       path: '/review',
     ),
     _NavDestination(
-      label: 'Socratic Chat',
+      label: 'Chat',
       icon: Icons.chat_bubble_outline,
       path: '/chat',
     ),
     _NavDestination(
-      label: 'Profile & Analytics',
+      label: 'Profile',
       icon: Icons.person_outline,
       path: '/profile',
     ),
@@ -35,18 +37,71 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      type: BottomNavigationBarType.fixed,
-      onTap: (int index) => context.go(_destinations[index].path),
-      items: _destinations
-          .map(
-            (_NavDestination destination) => BottomNavigationBarItem(
-              icon: Icon(destination.icon),
-              label: destination.label,
-            ),
-          )
-          .toList(),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.outlineSoft),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          children: List<Widget>.generate(_destinations.length, (int index) {
+            final _NavDestination destination = _destinations[index];
+            final bool isSelected = index == currentIndex;
+
+            return Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(22),
+                onTap: () => context.go(destination.path),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.surfaceBlue
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        destination.icon,
+                        size: 20,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        destination.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
     );
   }
 }

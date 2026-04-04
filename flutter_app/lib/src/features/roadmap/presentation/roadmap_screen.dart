@@ -14,72 +14,87 @@ class RoadmapScreen extends StatelessWidget {
     final TextTheme textTheme = Theme.of(context).textTheme;
 
     return AppScaffoldShell(
-      title: 'Roadmap',
       children: [
-        Text('Current Roadmap', style: textTheme.displayLarge),
-        const SizedBox(height: 8),
-        Text(
-          'From search basics to algorithmic tradeoffs, with one active node at a time.',
-          style: textTheme.bodyLarge,
-        ),
-        const SizedBox(height: 24),
-        SectionCard(
-          title: 'Current Node',
-          subtitle: 'Binary search invariants',
-          trailing: const ProgressBadge(label: 'Stage 1'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Understand how interval boundaries move and how to explain the invariant clearly.',
-                style: textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: PrimaryActionButton(
-                      label: 'Start This Node',
-                      onPressed: () {},
-                    ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                AppColors.surfaceBlue,
+                AppColors.surfaceElevated,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(34),
+            border: Border.all(color: AppColors.outlineSoft),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const ProgressBadge(label: 'Your Journey'),
+                const SizedBox(height: 16),
+                Text(
+                  'Mastering Digital Architecture',
+                  style: textTheme.displayLarge?.copyWith(fontSize: 36),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Advance from first principles to design judgment through a paced sequence of foundations, critique, and synthesis.',
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: AppColors.onSurfaceVariant,
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: PrimaryActionButton(
+                    label: 'CONTINUE LEARNING',
+                    onPressed: () {},
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),
         SectionCard(
-          title: 'Stage Progress',
-          subtitle: 'The current learning path broken into milestones.',
+          title: 'Journey Milestones',
+          subtitle: 'One active stage, one stretching stage, one horizon stage.',
           trailing: const ProgressBadge(label: '3 stages'),
           child: Column(
             children: const [
-              _StageTile(
-                title: 'Stage 1 · Core reasoning',
-                status: 'In progress',
-                emphasis: true,
+              _JourneyNode(
+                title: 'Foundation Systems',
+                detail: 'Clarify structure, intent, and constraints.',
+                state: 'In progress',
+                accent: AppColors.surfaceWarm,
+                isFirst: true,
               ),
-              SizedBox(height: 12),
-              _StageTile(
-                title: 'Stage 2 · Applied comparison',
-                status: 'Locked next',
+              _JourneyNode(
+                title: 'Patterns in Motion',
+                detail: 'Compare multiple architectures against real trade-offs.',
+                state: 'Up next',
+                accent: AppColors.surfaceBlue,
               ),
-              SizedBox(height: 12),
-              _StageTile(
-                title: 'Stage 3 · Transfer to real problems',
-                status: 'Upcoming',
+              _JourneyNode(
+                title: 'Synthesis Studio',
+                detail: 'Defend your own architecture with concrete rationale.',
+                state: 'Locked',
+                accent: AppColors.surfaceMint,
+                isLast: true,
               ),
             ],
           ),
         ),
         const SizedBox(height: 16),
         SectionCard(
-          title: 'Knowledge Graph',
-          subtitle: 'A future visual layer for relationships across concepts.',
-          trailing: const ProgressBadge(label: 'Coming soon'),
+          title: 'Knowledge Constellation',
+          subtitle: 'A visual layer that reveals how each concept connects.',
+          trailing: const ProgressBadge(label: 'Soon'),
           child: Text(
-            'This entry will open the graph view once we wire secondary routes.',
+            'After the primary roadmap is stable, this view will let you branch into related systems, tensions, and examples without losing the main sequence.',
             style: textTheme.bodyMedium,
           ),
         ),
@@ -88,46 +103,89 @@ class RoadmapScreen extends StatelessWidget {
   }
 }
 
-class _StageTile extends StatelessWidget {
-  const _StageTile({
+class _JourneyNode extends StatelessWidget {
+  const _JourneyNode({
     required this.title,
-    required this.status,
-    this.emphasis = false,
+    required this.detail,
+    required this.state,
+    required this.accent,
+    this.isFirst = false,
+    this.isLast = false,
   });
 
   final String title;
-  final String status;
-  final bool emphasis;
+  final String detail;
+  final String state;
+  final Color accent;
+  final bool isFirst;
+  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme textTheme = Theme.of(context).textTheme;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: emphasis
-            ? AppColors.surfaceContainerHighest
-            : AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: textTheme.titleMedium,
+    return SizedBox(
+      height: 118,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 28,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: isFirst ? Colors.transparent : AppColors.outlineSoft,
+                  ),
+                ),
+                Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: isLast ? Colors.transparent : AppColors.outlineSoft,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: accent,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.outlineSoft),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: textTheme.titleLarge),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Text(detail, style: textTheme.bodyMedium),
+                    ),
+                    Text(
+                      state,
+                      style: textTheme.labelLarge?.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            Text(
-              status,
-              style: textTheme.labelMedium?.copyWith(
-                color: emphasis ? AppColors.primary : AppColors.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

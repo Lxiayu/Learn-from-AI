@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_app/main.dart';
+import 'package:flutter_app/src/features/navigation/presentation/app_bottom_nav.dart';
 
 void main() {
   testWidgets('boots into Home with five bottom tabs', (tester) async {
     await tester.pumpWidget(const MyApp());
 
+    expect(find.text('The Curator'), findsOneWidget);
     expect(find.text('Home'), findsWidgets);
     expect(find.text('Roadmap'), findsOneWidget);
     expect(find.text('Review'), findsOneWidget);
-    expect(find.text('Socratic Chat'), findsOneWidget);
-    expect(find.text('Profile & Analytics'), findsOneWidget);
-    expect(find.text('Today'), findsOneWidget);
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
+    expect(find.text('Chat'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
+    expect(find.text('Good Morning, Alex!'), findsOneWidget);
+    expect(find.byType(AppBottomNav), findsOneWidget);
   });
 
   testWidgets('uses branded LearnAI theme tokens', (tester) async {

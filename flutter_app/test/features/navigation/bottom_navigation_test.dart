@@ -9,26 +9,26 @@ void main() {
     await tester.pumpWidget(const MyApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Today'), findsOneWidget);
+    expect(find.text('Good Morning, Alex!'), findsOneWidget);
 
     await tester.tap(find.text('Roadmap'));
     await tester.pumpAndSettle();
-    expect(find.text('Current Roadmap'), findsOneWidget);
+    expect(find.text('Mastering Digital Architecture'), findsOneWidget);
 
     await tester.tap(find.text('Review'));
     await tester.pumpAndSettle();
-    expect(find.text('Review Schedule'), findsOneWidget);
+    expect(find.text('Active Topics'), findsOneWidget);
 
-    await tester.tap(find.text('Socratic Chat'));
+    await tester.tap(find.text('Chat'));
     await tester.pumpAndSettle();
-    expect(find.text('Current Topic'), findsOneWidget);
+    expect(find.text('The Essence of Justice'), findsOneWidget);
 
-    await tester.tap(find.text('Profile & Analytics'));
+    await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
-    expect(find.text('Learning Insights'), findsOneWidget);
+    expect(find.text('Alex Harrison'), findsOneWidget);
 
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
-    expect(find.text('Achievements'), findsOneWidget);
+    expect(find.text('Daily Learning Goal'), findsOneWidget);
   });
 }
