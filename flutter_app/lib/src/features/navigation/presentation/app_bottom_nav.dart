@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/locale/app_copy.dart';
 import '../../../app/theme/app_colors.dart';
 
 class AppBottomNav extends StatelessWidget {
@@ -11,32 +12,37 @@ class AppBottomNav extends StatelessWidget {
 
   final int currentIndex;
 
-  static const List<_NavDestination> _destinations = <_NavDestination>[
-    _NavDestination(label: 'Home', icon: Icons.home_outlined, path: '/home'),
-    _NavDestination(
-      label: 'Roadmap',
-      icon: Icons.alt_route_outlined,
-      path: '/roadmap',
-    ),
-    _NavDestination(
-      label: 'Review',
-      icon: Icons.refresh_outlined,
-      path: '/review',
-    ),
-    _NavDestination(
-      label: 'Chat',
-      icon: Icons.chat_bubble_outline,
-      path: '/chat',
-    ),
-    _NavDestination(
-      label: 'Profile',
-      icon: Icons.person_outline,
-      path: '/profile',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final AppCopy copy = context.copy;
+    final List<_NavDestination> destinations = <_NavDestination>[
+      _NavDestination(
+        label: copy.t(en: 'Home', zh: '首页'),
+        icon: Icons.home_outlined,
+        path: '/home',
+      ),
+      _NavDestination(
+        label: copy.t(en: 'Roadmap', zh: '路线'),
+        icon: Icons.alt_route_outlined,
+        path: '/roadmap',
+      ),
+      _NavDestination(
+        label: copy.t(en: 'Review', zh: '复习'),
+        icon: Icons.refresh_outlined,
+        path: '/review',
+      ),
+      _NavDestination(
+        label: copy.t(en: 'Chat', zh: '对话'),
+        icon: Icons.chat_bubble_outline,
+        path: '/chat',
+      ),
+      _NavDestination(
+        label: copy.t(en: 'Profile', zh: '我的'),
+        icon: Icons.person_outline,
+        path: '/profile',
+      ),
+    ];
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated.withValues(alpha: 0.94),
@@ -53,8 +59,8 @@ class AppBottomNav extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Row(
-          children: List<Widget>.generate(_destinations.length, (int index) {
-            final _NavDestination destination = _destinations[index];
+          children: List<Widget>.generate(destinations.length, (int index) {
+            final _NavDestination destination = destinations[index];
             final bool isSelected = index == currentIndex;
 
             return Expanded(

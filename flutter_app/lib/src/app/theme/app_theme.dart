@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../locale/app_language.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 
-ThemeData buildAppTheme() {
+ThemeData buildAppTheme([
+  AppLanguage language = AppLanguage.english,
+]) {
   const ColorScheme colorScheme = ColorScheme(
     brightness: Brightness.light,
     primary: AppColors.primary,
@@ -16,7 +19,7 @@ ThemeData buildAppTheme() {
     onSurface: AppColors.onSurface,
   );
 
-  final TextTheme textTheme = AppTextStyles.buildTextTheme();
+  final TextTheme textTheme = AppTextStyles.buildTextTheme(language);
 
   return ThemeData(
     useMaterial3: true,
@@ -33,17 +36,15 @@ ThemeData buildAppTheme() {
             elevation: 0,
             titleTextStyle: textTheme.titleLarge,
           ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
       backgroundColor: AppColors.surface,
       selectedItemColor: AppColors.primary,
       unselectedItemColor: AppColors.onSurfaceVariant,
       selectedLabelStyle: TextStyle(
-        fontFamily: 'Inter',
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
       unselectedLabelStyle: TextStyle(
-        fontFamily: 'Inter',
         fontSize: 12,
         fontWeight: FontWeight.w500,
       ),

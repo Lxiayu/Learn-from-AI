@@ -12,17 +12,18 @@ abstract final class AppColors {
   static const Color surfaceContainerHigh = Color(0xFFE9E8E7);
   static const Color surfaceContainerHighest = Color(0xFFE3E2E2);
   static const Color surfaceTint = Color(0xFF4355B9);
-  static const Color shellGradientTop = Color(0xFFF4EBDD);
-  static const Color shellGradientBottom = Color(0xFFFBF9F9);
-  static const Color surfaceWarm = Color(0xFFF7F0E7);
+  static const Color shellGradientTop = Color(0xFFF1F5FF);
+  static const Color shellGradientBottom = Color(0xFFFBFCFF);
+  static const Color surfaceWarm = Color(0xFFF3F5FB);
   static const Color surfaceBlue = Color(0xFFE8EEFF);
+  static const Color surfaceBlueStrong = Color(0xFFDDE6FF);
   static const Color surfaceMint = Color(0xFFE8F1EE);
-  static const Color surfaceRose = Color(0xFFF8EBE7);
+  static const Color surfaceRose = Color(0xFFF1F3FD);
 
   static const Color onSurface = Color(0xFF1B1C1C);
   static const Color onSurfaceVariant = Color(0xFF454652);
   static const Color outlineVariant = Color(0xFFC5C5D4);
-  static const Color outlineSoft = Color(0xFFE3DDD5);
+  static const Color outlineSoft = Color(0xFFDDE3F0);
   static const Color shadow = Color(0x1E1E2432);
 
   static const Color tertiary = Color(0xFF004E11);
