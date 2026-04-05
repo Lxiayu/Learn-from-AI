@@ -1,7 +1,8 @@
-from app.config import settings
+import sqlite3
+from pathlib import Path
 
 
-def get_database_url() -> str:
-    """Return the configured database URL for future repository setup."""
-
-    return settings.database_url
+def get_connection(database_path: Path) -> sqlite3.Connection:
+    connection = sqlite3.connect(database_path)
+    connection.row_factory = sqlite3.Row
+    return connection
