@@ -67,3 +67,9 @@ class RoadmapService:
         if roadmap is None:
             raise ValueError("roadmap_not_found")
         return self.roadmap_repository.activate(roadmap_id)
+
+    def get_current(self) -> Roadmap:
+        roadmap = self.roadmap_repository.get_active_roadmap()
+        if roadmap is None:
+            raise ValueError("active_roadmap_not_found")
+        return roadmap

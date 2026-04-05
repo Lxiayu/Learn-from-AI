@@ -19,11 +19,16 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppCopy copy = context.copy;
-    final HomeDashboardState dashboard = ref.watch(homeDashboardProvider);
-    final TextTheme textTheme = Theme.of(context).textTheme;
+    final AsyncValue<HomeDashboardState> dashboardAsync = ref.watch(
+      homeDashboardProvider,
+    );
 
-    return AppScaffoldShell(
-      children: <Widget>[
+    return dashboardAsync.when(
+      data: (HomeDashboardState dashboard) {
+        final TextTheme textTheme = Theme.of(context).textTheme;
+
+        return AppScaffoldShell(
+          children: <Widget>[
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -319,8 +324,49 @@ class HomeScreen extends ConsumerWidget {
                   ..removeLast(),
               );
             },
+        ),
+          ],
+        );
+      },
+      loading: () => AppScaffoldShell(
+        children: <Widget>[
+          SectionCard(
+            title: copy.t(en: 'Loading today', zh: '正在准备今天的学习'),
+            subtitle: copy.t(
+              en: 'We are syncing the current roadmap, inquiry, and review queue.',
+              zh: '正在同步当前路线、主学习和复习队列。',
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
+              child: Center(child: CircularProgressIndicator()),
+            ),
           ),
-      ],
+        ],
+      ),
+      error: (Object error, StackTrace stackTrace) => AppScaffoldShell(
+        children: <Widget>[
+          StatusMessageCard(
+            title: copy.t(
+              en: 'The task console could not load',
+              zh: '任务台暂时加载失败',
+            ),
+            body: copy.t(
+              en: 'Check whether the local backend is running, then refresh this page.',
+              zh: '请先确认本地后端已经启动，然后重新进入这个页面。',
+            ),
+            tone: StatusMessageTone.warning,
+          ),
+          const SizedBox(height: 16),
+          SectionCard(
+            title: copy.t(en: 'Error details', zh: '错误详情'),
+            subtitle: copy.t(
+              en: 'This helps during local MVP debugging.',
+              zh: '这有助于本地 MVP 联调时定位问题。',
+            ),
+            child: SelectableText(error.toString()),
+          ),
+        ],
+      ),
     );
   }
 

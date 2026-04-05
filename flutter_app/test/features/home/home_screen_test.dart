@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_app/src/app/theme/app_theme.dart';
 import 'package:flutter_app/src/features/home/presentation/home_screen.dart';
+import 'package:flutter_app/src/features/learning/data/learning_providers.dart';
+
+import '../../test_helpers/fake_learning_repository.dart';
 
 void main() {
   testWidgets('Home behaves like a task-first learning console', (
@@ -11,12 +14,16 @@ void main() {
   ) async {
     await tester.pumpWidget(
       ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
         child: MaterialApp(
           theme: buildAppTheme(),
           home: const HomeScreen(),
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text('Continue current learning'), findsOneWidget);
     expect(find.textContaining('You paused at'), findsOneWidget);

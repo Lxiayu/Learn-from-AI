@@ -18,11 +18,16 @@ class RoadmapScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppCopy copy = context.copy;
-    final RoadmapProgressState roadmap = ref.watch(roadmapProgressProvider);
-    final TextTheme textTheme = Theme.of(context).textTheme;
+    final AsyncValue<RoadmapProgressState> roadmapAsync = ref.watch(
+      roadmapProgressProvider,
+    );
 
-    return AppScaffoldShell(
-      children: <Widget>[
+    return roadmapAsync.when(
+      data: (RoadmapProgressState roadmap) {
+        final TextTheme textTheme = Theme.of(context).textTheme;
+
+        return AppScaffoldShell(
+          children: <Widget>[
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -168,7 +173,48 @@ class RoadmapScreen extends ConsumerWidget {
             ),
           ),
         ),
-      ],
+          ],
+        );
+      },
+      loading: () => AppScaffoldShell(
+        children: <Widget>[
+          SectionCard(
+            title: copy.t(en: 'Loading roadmap', zh: '正在加载路线图'),
+            subtitle: copy.t(
+              en: 'We are preparing the active milestones and next unlock path.',
+              zh: '正在整理当前阶段和下一步解锁路径。',
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ),
+        ],
+      ),
+      error: (Object error, StackTrace stackTrace) => AppScaffoldShell(
+        children: <Widget>[
+          StatusMessageCard(
+            title: copy.t(
+              en: 'The roadmap could not load',
+              zh: '路线图暂时加载失败',
+            ),
+            body: copy.t(
+              en: 'Check whether the local backend is running, then try again.',
+              zh: '请先确认本地后端已经启动，然后再试一次。',
+            ),
+            tone: StatusMessageTone.warning,
+          ),
+          const SizedBox(height: 16),
+          SectionCard(
+            title: copy.t(en: 'Error details', zh: '错误详情'),
+            subtitle: copy.t(
+              en: 'Visible here to simplify local debugging.',
+              zh: '这里会展示错误信息，方便本地联调。',
+            ),
+            child: SelectableText(error.toString()),
+          ),
+        ],
+      ),
     );
   }
 

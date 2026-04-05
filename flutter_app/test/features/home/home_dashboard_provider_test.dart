@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flutter_app/src/features/home/application/home_dashboard_provider.dart';
 import 'package:flutter_app/src/features/learning/data/learning_providers.dart';
-import 'package:flutter_app/src/features/review/application/review_queue_provider.dart';
 
 import '../../test_helpers/fake_learning_repository.dart';
 
 void main() {
-  test('review queue groups items by urgency', () async {
+  test('home dashboard provider loads task-first state from repository', () async {
     final container = ProviderContainer(
       overrides: <Override>[
         learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
@@ -15,9 +15,9 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    final queue = await container.read(reviewQueueProvider.future);
+    final state = await container.read(homeDashboardProvider.future);
 
-    expect(queue.dueToday, isNotEmpty);
-    expect(queue.completedToday, isNotEmpty);
+    expect(state.learningTask.route, '/chat');
+    expect(state.reviewTask.route, '/review');
   });
 }

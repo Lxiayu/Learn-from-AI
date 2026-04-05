@@ -47,3 +47,16 @@ def confirm_roadmap(roadmap_id: str, request: Request) -> RoadmapResponse:
     return RoadmapResponse(
         **{**roadmap.to_dict(), "stages": [asdict(stage) for stage in roadmap.stages]}
     )
+
+
+@router.get("/current", response_model=RoadmapResponse)
+def get_current_roadmap(request: Request) -> RoadmapResponse:
+    service = _service(request)
+    try:
+        roadmap = service.get_current()
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+    return RoadmapResponse(
+        **{**roadmap.to_dict(), "stages": [asdict(stage) for stage in roadmap.stages]}
+    )

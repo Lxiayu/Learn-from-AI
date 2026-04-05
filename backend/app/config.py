@@ -10,6 +10,7 @@ class Settings:
     app_name: str
     api_prefix: str
     database_path: Path
+    allowed_origins: tuple[str, ...]
 
     @property
     def database_url(self) -> str:
@@ -23,4 +24,10 @@ def get_settings() -> Settings:
         app_name="LearnAI Local Backend",
         api_prefix="/api/v1",
         database_path=configured_path,
+        allowed_origins=(
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ),
     )

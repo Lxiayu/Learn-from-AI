@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/mock/mock_learning_data.dart';
+import '../../learning/data/learning_providers.dart';
 import '../../../shared/models/roadmap_models.dart';
 
-final Provider<RoadmapProgressState> roadmapProgressProvider =
-    Provider<RoadmapProgressState>((Ref ref) => mockRoadmapProgressState);
+final FutureProvider<RoadmapProgressState> roadmapProgressProvider =
+    FutureProvider<RoadmapProgressState>(
+      (Ref ref) => ref.watch(learningRepositoryProvider).loadRoadmapProgress(),
+    );

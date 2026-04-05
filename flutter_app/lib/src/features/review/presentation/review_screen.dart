@@ -18,12 +18,15 @@ class ReviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppCopy copy = context.copy;
-    final ReviewQueueState queue = ref.watch(reviewQueueProvider);
+    final AsyncValue<ReviewQueueState> queueAsync = ref.watch(reviewQueueProvider);
     final ReviewQueueNotifier notifier = ref.read(reviewQueueProvider.notifier);
-    final TextTheme textTheme = Theme.of(context).textTheme;
+    
+    return queueAsync.when(
+      data: (ReviewQueueState queue) {
+        final TextTheme textTheme = Theme.of(context).textTheme;
 
-    return AppScaffoldShell(
-      children: <Widget>[
+        return AppScaffoldShell(
+          children: <Widget>[
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -257,7 +260,48 @@ class ReviewScreen extends ConsumerWidget {
             );
           },
         ),
-      ],
+          ],
+        );
+      },
+      loading: () => AppScaffoldShell(
+        children: <Widget>[
+          SectionCard(
+            title: copy.t(en: 'Loading review queue', zh: '正在加载复习队列'),
+            subtitle: copy.t(
+              en: 'We are checking what is fading first and what can wait.',
+              zh: '正在判断哪些内容最先需要复习，哪些内容还可以稍后处理。',
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ),
+        ],
+      ),
+      error: (Object error, StackTrace stackTrace) => AppScaffoldShell(
+        children: <Widget>[
+          StatusMessageCard(
+            title: copy.t(
+              en: 'The review queue could not load',
+              zh: '复习队列暂时加载失败',
+            ),
+            body: copy.t(
+              en: 'Check whether the local backend is running before you retry.',
+              zh: '请先确认本地后端已经启动，再重新尝试。',
+            ),
+            tone: StatusMessageTone.warning,
+          ),
+          const SizedBox(height: 16),
+          SectionCard(
+            title: copy.t(en: 'Error details', zh: '错误详情'),
+            subtitle: copy.t(
+              en: 'Shown here to simplify local debugging.',
+              zh: '这里展示错误详情，方便本地联调。',
+            ),
+            child: SelectableText(error.toString()),
+          ),
+        ],
+      ),
     );
   }
 

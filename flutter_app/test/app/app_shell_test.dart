@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_app/main.dart';
+import 'package:flutter_app/src/app/app.dart';
+import 'package:flutter_app/src/features/learning/data/learning_providers.dart';
 import 'package:flutter_app/src/features/navigation/presentation/app_bottom_nav.dart';
+
+import '../test_helpers/fake_learning_repository.dart';
 
 void main() {
   testWidgets('boots into Home with five bottom tabs', (tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     expect(find.text('The Curator'), findsOneWidget);
     expect(find.text('Home'), findsWidgets);
@@ -19,7 +31,15 @@ void main() {
   });
 
   testWidgets('uses branded LearnAI theme tokens', (tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     final MaterialApp app = tester.widget<MaterialApp>(
       find.byType(MaterialApp),
@@ -39,7 +59,15 @@ void main() {
   testWidgets('can switch interface language to Chinese from settings', (
     tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
@@ -56,7 +84,15 @@ void main() {
   testWidgets('header actions show visible feedback instead of no-op', (
     tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.notifications_none_rounded));
     await tester.pumpAndSettle();

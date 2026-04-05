@@ -1,44 +1,36 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/mock/mock_learning_data.dart';
+import '../../learning/data/learning_providers.dart';
 import '../../../shared/models/review_models.dart';
 
-final StateNotifierProvider<ReviewQueueNotifier, ReviewQueueState>
+final AsyncNotifierProvider<ReviewQueueNotifier, ReviewQueueState>
 reviewQueueProvider =
-    StateNotifierProvider<ReviewQueueNotifier, ReviewQueueState>(
-      (Ref ref) => ReviewQueueNotifier(),
+    AsyncNotifierProvider<ReviewQueueNotifier, ReviewQueueState>(
+      ReviewQueueNotifier.new,
     );
 
-class ReviewQueueNotifier extends StateNotifier<ReviewQueueState> {
-  ReviewQueueNotifier() : super(mockReviewQueueState);
+class ReviewQueueNotifier extends AsyncNotifier<ReviewQueueState> {
+  @override
+  Future<ReviewQueueState> build() {
+    return ref.watch(learningRepositoryProvider).loadReviewQueue();
+  }
 
-  void completeItem(String id) {
-    final ReviewQueueItem? dueItem = _findById(state.dueToday, id);
-    final ReviewQueueItem? upNextItem = _findById(state.upNext, id);
-    final ReviewQueueItem? item = dueItem ?? upNextItem;
-
-    if (item == null) {
+  Future<void> completeItem(String id) async {
+    final ReviewQueueState? currentState = state.valueOrNull;
+    if (currentState == null) {
       return;
     }
 
-    state = state.copyWith(
-      dueToday: state.dueToday.where((ReviewQueueItem entry) => entry.id != id).toList(),
-      upNext: state.upNext.where((ReviewQueueItem entry) => entry.id != id).toList(),
-      completedToday: <ReviewQueueItem>[item, ...state.completedToday],
+    final nextState = await ref
+        .read(learningRepositoryProvider)
+        .completeReview(currentState: currentState, reviewTaskId: id);
+    state = AsyncData(nextState);
+  }
+
+  Future<void> reset() async {
+    state = const AsyncLoading<ReviewQueueState>();
+    state = AsyncData(
+      await ref.read(learningRepositoryProvider).loadReviewQueue(),
     );
-  }
-
-  void reset() {
-    state = mockReviewQueueState;
-  }
-
-  ReviewQueueItem? _findById(List<ReviewQueueItem> items, String id) {
-    for (final ReviewQueueItem item in items) {
-      if (item.id == id) {
-        return item;
-      }
-    }
-
-    return null;
   }
 }

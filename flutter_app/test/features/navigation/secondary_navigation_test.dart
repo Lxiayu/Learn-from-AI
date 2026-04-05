@@ -1,13 +1,24 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_app/main.dart';
+import 'package:flutter_app/src/app/app.dart';
 import 'package:flutter_app/src/app/router/app_router.dart';
+import 'package:flutter_app/src/features/learning/data/learning_providers.dart';
+
+import '../../test_helpers/fake_learning_repository.dart';
 
 void main() {
   testWidgets('home primary actions open chat and review flows', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
     appRouter.go('/home');
     await tester.pumpAndSettle();
 
@@ -28,7 +39,14 @@ void main() {
   testWidgets('chat secondary screens can be opened from the primary page', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
     appRouter.go('/home');
     await tester.pumpAndSettle();
 
@@ -44,7 +62,14 @@ void main() {
   testWidgets('review secondary screens can be opened from the primary page', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
     appRouter.go('/home');
     await tester.pumpAndSettle();
 
@@ -60,7 +85,14 @@ void main() {
   testWidgets('roadmap graph view can be opened from the primary page', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
     appRouter.go('/home');
     await tester.pumpAndSettle();
 
@@ -76,7 +108,14 @@ void main() {
   testWidgets('profile insight report can be opened from the primary page', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
     appRouter.go('/home');
     await tester.pumpAndSettle();
 
@@ -92,7 +131,14 @@ void main() {
   testWidgets('language change persists when navigating back to home', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
+        child: const LearnAiApp(),
+      ),
+    );
     appRouter.go('/profile');
     await tester.pumpAndSettle();
 

@@ -2,12 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_app/src/features/learning/data/learning_providers.dart';
-import 'package:flutter_app/src/features/review/application/review_queue_provider.dart';
+import 'package:flutter_app/src/features/roadmap/application/roadmap_progress_provider.dart';
 
 import '../../test_helpers/fake_learning_repository.dart';
 
 void main() {
-  test('review queue groups items by urgency', () async {
+  test('roadmap provider resolves the current roadmap from repository', () async {
     final container = ProviderContainer(
       overrides: <Override>[
         learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
@@ -15,9 +15,9 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    final queue = await container.read(reviewQueueProvider.future);
+    final state = await container.read(roadmapProgressProvider.future);
 
-    expect(queue.dueToday, isNotEmpty);
-    expect(queue.completedToday, isNotEmpty);
+    expect(state.milestones, hasLength(3));
+    expect(state.continueRoute, '/chat');
   });
 }

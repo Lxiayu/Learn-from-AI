@@ -65,6 +65,7 @@ const HomeDashboardState mockHomeDashboardState = HomeDashboardState(
 );
 
 const ChatSessionState mockChatSessionState = ChatSessionState(
+  sessionId: 'mock-session',
   task: ChatTaskSummary(
     topic: 'The Essence of Justice',
     currentPrompt: 'Explain the difference between justice and simple obedience.',

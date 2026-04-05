@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_app/src/app/theme/app_theme.dart';
 import 'package:flutter_app/src/features/roadmap/presentation/roadmap_screen.dart';
+import 'package:flutter_app/src/features/learning/data/learning_providers.dart';
+
+import '../../test_helpers/fake_learning_repository.dart';
 
 void main() {
   testWidgets('Roadmap explains progress and saved branches', (
@@ -11,12 +14,16 @@ void main() {
   ) async {
     await tester.pumpWidget(
       ProviderScope(
+        overrides: <Override>[
+          learningRepositoryProvider.overrideWithValue(FakeLearningRepository()),
+        ],
         child: MaterialApp(
           theme: buildAppTheme(),
           home: const RoadmapScreen(),
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text('Current stage goal'), findsOneWidget);
     expect(find.text('Why this is next'), findsOneWidget);

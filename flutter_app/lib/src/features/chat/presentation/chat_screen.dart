@@ -39,13 +39,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final AppCopy copy = context.copy;
-    final ChatSessionState session = ref.watch(chatSessionControllerProvider);
+    final AsyncValue<ChatSessionState> sessionAsync = ref.watch(
+      chatSessionControllerProvider,
+    );
     final ChatSessionController notifier =
         ref.read(chatSessionControllerProvider.notifier);
-    final TextTheme textTheme = Theme.of(context).textTheme;
+    
+    return sessionAsync.when(
+      data: (ChatSessionState session) {
+        final TextTheme textTheme = Theme.of(context).textTheme;
 
-    return AppScaffoldShell(
-      children: <Widget>[
+        return AppScaffoldShell(
+          children: <Widget>[
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -217,10 +222,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 width: double.infinity,
                 child: PrimaryActionButton(
                   label: copy.t(en: 'Send Reflection', zh: '提交思考'),
-                  onPressed: () {
+                  onPressed: () async {
                     notifier.updateDraft(_controller.text);
-                    notifier.submitDraft();
-                    _controller.clear();
+                    await notifier.submitDraft();
+                    if (mounted) {
+                      _controller.clear();
+                    }
                   },
                 ),
               ),
@@ -262,7 +269,48 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ),
-      ],
+          ],
+        );
+      },
+      loading: () => AppScaffoldShell(
+        children: <Widget>[
+          SectionCard(
+            title: copy.t(en: 'Loading inquiry', zh: '正在加载当前主学习'),
+            subtitle: copy.t(
+              en: 'We are restoring the current task card and dialogue state.',
+              zh: '正在恢复当前任务卡和对话进度。',
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ),
+        ],
+      ),
+      error: (Object error, StackTrace stackTrace) => AppScaffoldShell(
+        children: <Widget>[
+          StatusMessageCard(
+            title: copy.t(
+              en: 'The Socratic session could not load',
+              zh: '当前苏格拉底学习会话加载失败',
+            ),
+            body: copy.t(
+              en: 'Check whether the local backend is running, then reopen this tab.',
+              zh: '请先确认本地后端已经启动，然后重新打开这个页面。',
+            ),
+            tone: StatusMessageTone.warning,
+          ),
+          const SizedBox(height: 16),
+          SectionCard(
+            title: copy.t(en: 'Error details', zh: '错误详情'),
+            subtitle: copy.t(
+              en: 'Visible here to simplify local debugging.',
+              zh: '这里会展示错误信息，方便本地联调。',
+            ),
+            child: SelectableText(error.toString()),
+          ),
+        ],
+      ),
     );
   }
 

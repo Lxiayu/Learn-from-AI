@@ -40,3 +40,23 @@ def test_confirm_roadmap_marks_it_active(client) -> None:
 
     assert response.status_code == 200
     assert response.json()["status"] == "active"
+
+
+def test_get_current_roadmap_returns_active_roadmap(client) -> None:
+    learning_goal_id = _create_learning_goal(client)
+    generated = client.post(
+        "/api/v1/roadmaps/generate",
+        json={"learning_goal_id": learning_goal_id},
+    )
+    assert generated.status_code == 201
+    roadmap_id = generated.json()["id"]
+
+    confirmed = client.post(f"/api/v1/roadmaps/{roadmap_id}/confirm")
+    assert confirmed.status_code == 200
+
+    response = client.get("/api/v1/roadmaps/current")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == roadmap_id
+    assert body["status"] == "active"

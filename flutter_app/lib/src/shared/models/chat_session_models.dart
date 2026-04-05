@@ -50,6 +50,7 @@ class ChatMessage {
 
 class ChatSessionState {
   const ChatSessionState({
+    required this.sessionId,
     required this.task,
     required this.messages,
     required this.currentStage,
@@ -61,6 +62,7 @@ class ChatSessionState {
     this.helperFeedbackBody,
   });
 
+  final String sessionId;
   final ChatTaskSummary task;
   final List<ChatMessage> messages;
   final ChatPromptStage currentStage;
@@ -72,6 +74,7 @@ class ChatSessionState {
   final String? helperFeedbackBody;
 
   ChatSessionState copyWith({
+    String? sessionId,
     ChatTaskSummary? task,
     List<ChatMessage>? messages,
     ChatPromptStage? currentStage,
@@ -83,6 +86,7 @@ class ChatSessionState {
     Object? helperFeedbackBody = _chatStateUnset,
   }) {
     return ChatSessionState(
+      sessionId: sessionId ?? this.sessionId,
       task: task ?? this.task,
       messages: messages ?? this.messages,
       currentStage: currentStage ?? this.currentStage,
