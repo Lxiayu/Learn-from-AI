@@ -192,3 +192,20 @@ class RoadmapRepository:
         roadmap = self.get_by_id(roadmap_id)
         assert roadmap is not None
         return roadmap
+
+    def get_active_roadmap(self) -> Roadmap | None:
+        self.ensure_tables()
+        with get_connection(self.database_path) as connection:
+            row = connection.execute(
+                """
+                SELECT id FROM roadmaps
+                WHERE status = 'active'
+                ORDER BY created_at DESC
+                LIMIT 1
+                """
+            ).fetchone()
+
+        if row is None:
+            return None
+
+        return self.get_by_id(row["id"])

@@ -24,3 +24,15 @@ class MockRoadmapProvider:
                 },
             ],
         }
+
+    def generate_hint(self, *, topic: str, phase: str) -> str:
+        hints = {
+            "explain": f"先说出 {topic} 最关键的一条特征，不用一开始就把所有细节说全。",
+            "example": f"先想一个你见过的 {topic} 场景，再把概念套进去。",
+            "compare": f"试着说出 {topic} 和相近概念最明显的不同点。",
+            "transfer": f"把 {topic} 放到一个新问题里，看看它是否还适用。",
+        }
+        return hints.get(phase, f"先抓住 {topic} 的关键词再回答。")
+
+    def explain_again(self, *, topic: str, objective: str) -> str:
+        return f"换个方式理解：{topic} 的核心目标是 {objective}"
