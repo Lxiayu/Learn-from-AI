@@ -1,5 +1,16 @@
 # Guided Learning Coach Skill
 
+## App Development
+
+当前仓库除了 skill，还在开发一个本地优先的学习应用原型：
+
+- Flutter 前端：`/Users/xia/program/Learn/.worktrees/local-backend-mvp/flutter_app`
+- 本地 FastAPI 后端：`/Users/xia/program/Learn/.worktrees/local-backend-mvp/backend`
+
+后端本地运行说明见：
+
+- [/Users/xia/program/Learn/.worktrees/local-backend-mvp/backend/README.md](/Users/xia/program/Learn/.worktrees/local-backend-mvp/backend/README.md)
+
 一个用于 AI IDE / openclaw 的引导式学习教练技能，通过苏格拉底式提问、间隔复习和主动学习策略帮助你系统掌握概念性知识。
 
 ## 功能特点
@@ -159,4 +170,3 @@ skills/guided-learning-coach/
 - [Trae IDE 文档](https://trae.ai)
 - [苏格拉底式教学法](https://en.wikipedia.org/wiki/Socratic_method)
 - [间隔重复](https://en.wikipedia.org/wiki/Spaced_repetition)
-
