@@ -2,927 +2,277 @@
 
 ## 文档信息
 - **项目名称**：智学AI（LearnAI）
-- **版本**：v1.0
-- **文档创建日期**：2026-04-03
+- **版本**：v1.1
+- **文档更新日期**：2026-04-05
 - **运维负责人**：运维团队
 
-## 一、部署概述
+## 一、文档定位
 
-### 1.1 部署环境
+本文件同样采用“双轨部署”表达：
 
-| 环境 | 用途 | 配置 |
-|------|------|------|
-| 开发环境 | 日常开发 | 本地Docker |
-| 测试环境 | 功能测试 | 4核8G × 3 |
-| 预发布环境 | 上线前验证 | 4核8G × 3 |
-| 生产环境 | 正式服务 | 8核16G × 6（多区域） |
+- **当前实施阶段**：本地优先部署，用于开发、联调、功能测试
+- **目标生产阶段**：未来迁移到 CloudBase 生产架构
 
-### 1.2 技术栈
+这意味着当前阶段的部署目标不是高可用集群，而是：
 
-| 组件 | 技术 | 版本 |
-|------|------|------|
-| 容器 | Docker | 24+ |
-| 容器编排 | Kubernetes | 1.28+ |
-| 服务网格 | Istio | 1.19+ |
-| 数据库 | PostgreSQL | 15+ |
-| 缓存 | Redis | 7+ |
-| 文档数据库 | MongoDB | 7+ |
-| 消息队列 | RabbitMQ | 3.12+ |
-| 监控 | Prometheus + Grafana | Latest |
-| 日志 | ELK Stack | Latest |
-| 负载均衡 | Nginx | 1.24+ |
+- 快速启动本地前后端
+- 稳定联调
+- 便于测试和排错
+- 为未来迁移到 CloudBase 保留清晰边界
 
-## 二、架构拓扑
-
-### 2.1 生产环境架构图
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         客户端                               │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐      │
-│  │ iOS App │  │Android  │  │ Web App │  │ 小程序   │      │
-│  └─────────┘  └─────────┘  └─────────┘  └─────────┘      │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                       CDN + WAF                              │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                      负载均衡层                               │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │              Nginx (主备)                              │  │
-│  └───────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                     应用服务层                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │  用户服务    │  │  学习服务    │  │  AI服务      │    │
-│  │  (3副本)     │  │  (3副本)     │  │  (2副本)     │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘    │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │  复习服务    │  │  数据服务    │  │  通知服务    │    │
-│  │  (2副本)     │  │  (2副本)     │  │  (2副本)     │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                     数据存储层                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │ PostgreSQL   │  │    Redis     │  │   MongoDB    │    │
-│  │  (主从)      │  │  (集群)      │  │  (副本集)     │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘    │
-│  ┌──────────────┐  ┌──────────────┐                        │
-│  │ RabbitMQ     │  │ 对象存储OSS  │                        │
-│  │  (集群)      │  │              │                        │
-│  └──────────────┘  └──────────────┘                        │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                    监控日志层                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │ Prometheus   │  │   Grafana    │  │  ELK Stack   │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 三、环境准备
-
-### 3.1 服务器要求
-
-#### 生产环境服务器配置
-
-| 节点类型 | CPU | 内存 | 磁盘 | 数量 |
-|---------|-----|------|------|------|
-| K8s Master | 4核 | 8G | 100G SSD | 3 |
-| K8s Worker | 8核 | 16G | 200G SSD | 6 |
-| 数据库主 | 8核 | 32G | 500G SSD | 1 |
-| 数据库从 | 8核 | 32G | 500G SSD | 2 |
-| Redis节点 | 4核 | 16G | 100G SSD | 3 |
-| MongoDB节点 | 4核 | 16G | 200G SSD | 3 |
-| 日志节点 | 8核 | 32G | 1T SSD | 3 |
-| 监控节点 | 4核 | 16G | 500G SSD | 1 |
-
-### 3.2 软件安装
-
-#### 3.2.1 Docker安装
-
-```bash
-# 安装Docker
-curl -fsSL https://get.docker.com | sh
-
-# 启动Docker
-systemctl start docker
-systemctl enable docker
-
-# 验证安装
-docker --version
-```
-
-#### 3.2.2 Kubernetes安装
-
-```bash
-# 使用kubeadm安装K8s
-kubeadm init --pod-network-cidr=10.244.0.0/16
-
-# 配置kubectl
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-# 安装网络插件
-kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
-```
-
-#### 3.2.3 Helm安装
-
-```bash
-# 安装Helm
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-# 验证安装
-helm version
-```
-
-## 四、容器化部署
-
-### 4.1 Docker镜像构建
-
-#### 4.1.1 后端服务Dockerfile
-
-```dockerfile
-# backend/Dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# 安装依赖
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 复制代码
-COPY . .
-
-# 暴露端口
-EXPOSE 8000
-
-# 启动命令
-CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:8000", "--workers", "4"]
-```
-
-#### 4.1.2 前端应用Dockerfile
-
-```dockerfile
-# frontend/Dockerfile
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-
-# 安装依赖
-COPY package*.json ./
-RUN npm ci
-
-# 构建
-COPY . .
-RUN npm run build
-
-# 生产阶段
-FROM nginx:1.24-alpine
-
-COPY --from=builder /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-### 4.2 Docker Compose（开发环境）
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-
-services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: learnai
-      POSTGRES_USER: learnai
-      POSTGRES_PASSWORD: learnai123
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U learnai"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  mongodb:
-    image: mongo:7
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: learnai
-      MONGO_INITDB_ROOT_PASSWORD: learnai123
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-
-  rabbitmq:
-    image: rabbitmq:3.12-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER: learnai
-      RABBITMQ_DEFAULT_PASS: learnai123
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://learnai:learnai123@postgres:5432/learnai
-      - REDIS_URL=redis://redis:6379/0
-      - MONGODB_URL=mongodb://learnai:learnai123@mongodb:27017/learnai
-      - RABBITMQ_URL=amqp://learnai:learnai123@rabbitmq:5672/
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./backend:/app
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "8080:80"
-    depends_on:
-      - backend
-
-volumes:
-  postgres_data:
-  redis_data:
-  mongo_data:
-  rabbitmq_data:
-```
-
-## 五、Kubernetes部署
-
-### 5.1 Helm Chart结构
-
-```
-learnai-chart/
-├── Chart.yaml
-├── values.yaml
-├── templates/
-│   ├── namespace.yaml
-│   ├── configmap.yaml
-│   ├── secret.yaml
-│   ├── ingress.yaml
-│   ├── service-user.yaml
-│   ├── service-learning.yaml
-│   ├── service-ai.yaml
-│   ├── deployment-user.yaml
-│   ├── deployment-learning.yaml
-│   ├── deployment-ai.yaml
-│   ├── hpa.yaml
-│   └── pdb.yaml
-└── charts/
-```
-
-### 5.2 部署配置示例
-
-#### 5.2.1 values.yaml
-
-```yaml
-# values.yaml
-global:
-  namespace: learnai
-  imagePullPolicy: IfNotPresent
-
-userService:
-  replicaCount: 3
-  image:
-    repository: learnai/user-service
-    tag: v1.0.0
-  resources:
-    requests:
-      cpu: 500m
-      memory: 512Mi
-    limits:
-      cpu: 2000m
-      memory: 2Gi
-  autoscaling:
-    enabled: true
-    minReplicas: 3
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 70
-
-learningService:
-  replicaCount: 3
-  image:
-    repository: learnai/learning-service
-    tag: v1.0.0
-  resources:
-    requests:
-      cpu: 500m
-      memory: 512Mi
-    limits:
-      cpu: 2000m
-      memory: 2Gi
-
-aiService:
-  replicaCount: 2
-  image:
-    repository: learnai/ai-service
-    tag: v1.0.0
-  resources:
-    requests:
-      cpu: 1000m
-      memory: 1Gi
-    limits:
-      cpu: 4000m
-      memory: 4Gi
-
-database:
-  postgres:
-    host: postgres-primary
-    port: 5432
-    database: learnai
-  redis:
-    host: redis-cluster
-    port: 6379
-  mongodb:
-    host: mongodb-cluster
-    port: 27017
-
-ingress:
-  enabled: true
-  host: api.learnai.com
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-```
-
-### 5.3 部署命令
-
-```bash
-# 创建命名空间
-kubectl create namespace learnai
-
-# 部署应用
-helm install learnai ./learnai-chart \
-  --namespace learnai \
-  -f values.yaml
-
-# 查看部署状态
-kubectl get pods -n learnai
-kubectl get services -n learnai
-kubectl get ingress -n learnai
-
-# 查看日志
-kubectl logs -f deployment/user-service -n learnai
-
-# 升级部署
-helm upgrade learnai ./learnai-chart \
-  --namespace learnai \
-  -f values.yaml
-
-# 回滚部署
-helm rollback learnai
-
-# 删除部署
-helm uninstall learnai -n learnai
-```
-
-## 六、数据库部署
-
-### 6.1 PostgreSQL部署
-
-#### 6.1.1 主从配置
-
-```yaml
-# postgresql-values.yaml
-primary:
-  replicaCount: 1
-  persistence:
-    size: 500Gi
-  resources:
-    requests:
-      cpu: 4
-      memory: 16Gi
-    limits:
-      cpu: 8
-      memory: 32Gi
-
-readReplicas:
-  replicaCount: 2
-  persistence:
-    size: 500Gi
-  resources:
-    requests:
-      cpu: 4
-      memory: 16Gi
-    limits:
-      cpu: 8
-      memory: 32Gi
-```
-
-#### 6.1.2 数据库初始化
-
-```sql
--- init.sql
-CREATE DATABASE learnai;
-CREATE USER learnai WITH PASSWORD 'learnai123';
-GRANT ALL PRIVILEGES ON DATABASE learnai TO learnai;
-
--- 创建表（参考数据库设计文档）
-```
-
-### 6.2 Redis集群部署
-
-```yaml
-# redis-values.yaml
-cluster:
-  enabled: true
-  replicas: 3
-master:
-  resources:
-    requests:
-      cpu: 2
-      memory: 8Gi
-    limits:
-      cpu: 4
-      memory: 16Gi
-slave:
-  resources:
-    requests:
-      cpu: 2
-      memory: 8Gi
-    limits:
-      cpu: 4
-      memory: 16Gi
-persistence:
-  size: 100Gi
-```
-
-### 6.3 MongoDB副本集部署
-
-```yaml
-# mongodb-values.yaml
-replicaSet:
-  enabled: true
-  replicas: 3
-persistence:
-  size: 200Gi
-resources:
-  requests:
-    cpu: 2
-    memory: 8Gi
-  limits:
-    cpu: 4
-    memory: 16Gi
-```
-
-## 七、CI/CD流程
-
-### 7.1 GitHub Actions配置
-
-```yaml
-# .github/workflows/deploy.yml
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      
-      - name: Install dependencies
-        run: |
-          cd backend
-          pip install -r requirements.txt
-      
-      - name: Run tests
-        run: |
-          cd backend
-          pytest tests/ --cov=app
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      
-      - name: Login to Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: ./backend
-          push: true
-          tags: |
-            ghcr.io/learnai/backend:latest
-            ghcr.io/learnai/backend:${{ github.sha }}
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.28.0'
-      
-      - name: Deploy to Kubernetes
-        run: |
-          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
-          export KUBECONFIG=kubeconfig
-          helm upgrade --install learnai ./learnai-chart \
-            --namespace learnai \
-            --set userService.image.tag=${{ github.sha }} \
-            --set learningService.image.tag=${{ github.sha }} \
-            --set aiService.image.tag=${{ github.sha }}
-```
-
-## 八、监控与告警
-
-### 8.1 Prometheus配置
-
-```yaml
-# prometheus-values.yaml
-prometheus:
-  prometheusSpec:
-    scrapeInterval: 30s
-    evaluationInterval: 30s
-    retention: 30d
-    resources:
-      requests:
-        cpu: 2
-        memory: 8Gi
-      limits:
-        cpu: 4
-        memory: 16Gi
-
-grafana:
-  persistence:
-    size: 50Gi
-  resources:
-    requests:
-      cpu: 1
-      memory: 2Gi
-    limits:
-      cpu: 2
-      memory: 4Gi
-
-alertmanager:
-  config:
-    global:
-      resolve_timeout: 5m
-    route:
-      receiver: 'slack-notifications'
-    receivers:
-      - name: 'slack-notifications'
-        slack_configs:
-          - api_url: 'https://hooks.slack.com/services/xxx'
-            channel: '#alerts'
-```
-
-### 8.2 告警规则
-
-```yaml
-# alerts.yaml
-groups:
-  - name: application
-    rules:
-      - alert: HighErrorRate
-        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
-        for: 5m
-        labels:
-          severity: critical
-        annotations:
-          summary: "High error rate detected"
-      
-      - alert: HighCPUUsage
-        expr: container_cpu_usage_seconds_total{namespace="learnai"} > 0.8
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High CPU usage"
-      
-      - alert: PodRestarting
-        expr: rate(kube_pod_container_status_restarts_total[5m]) > 0
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Pod is restarting frequently"
-      
-      - alert: DatabaseConnectionErrors
-        expr: rate(database_connection_errors_total[5m]) > 0
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Database connection errors"
-```
-
-### 8.3 Grafana仪表板
-
-- 应用性能仪表板
-- 数据库性能仪表板
-- 系统资源仪表板
-- 业务指标仪表板
-- 错误追踪仪表板
-
-## 九、日志管理
-
-### 9.1 ELK Stack部署
-
-```yaml
-# elk-values.yaml
-elasticsearch:
-  replicas: 3
-  minimumMasterNodes: 2
-  resources:
-    requests:
-      cpu: 2
-      memory: 4Gi
-    limits:
-      cpu: 4
-      memory: 8Gi
-  persistence:
-    size: 1Ti
-
-kibana:
-  resources:
-    requests:
-      cpu: 1
-      memory: 2Gi
-    limits:
-      cpu: 2
-      memory: 4Gi
-
-logstash:
-  replicas: 2
-  resources:
-    requests:
-      cpu: 2
-      memory: 4Gi
-    limits:
-      cpu: 4
-      memory: 8Gi
-
-filebeat:
-  enabled: true
-```
-
-### 9.2 日志格式
-
-```json
-{
-  "timestamp": "2026-04-03T10:00:00.000Z",
-  "level": "INFO",
-  "service": "user-service",
-  "trace_id": "abc123",
-  "user_id": "uuid",
-  "action": "login",
-  "duration_ms": 150,
-  "status": "success",
-  "message": "User login successful",
-  "metadata": {}
-}
-```
-
-## 十、备份与恢复
-
-### 10.1 备份策略
-
-| 数据类型 | 备份频率 | 保留时间 |
-|---------|---------|---------|
-| PostgreSQL全量 | 每日凌晨2点 | 30天 |
-| PostgreSQL增量 | 每小时 | 7天 |
-| Redis RDB | 每日 | 7天 |
-| MongoDB快照 | 每日 | 30天 |
-| 对象存储 | 实时同步 | 永久 |
-
-### 10.2 备份脚本
-
-```bash
-#!/bin/bash
-# backup.sh
-
-DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="/data/backups"
-
-# PostgreSQL备份
-pg_dump -U learnai -h postgres-primary learnai | gzip > $BACKUP_DIR/postgres_$DATE.sql.gz
-
-# Redis备份
-redis-cli --rdb $BACKUP_DIR/redis_$DATE.rdb
-
-# MongoDB备份
-mongodump --uri="mongodb://learnai:learnai123@mongodb-cluster:27017/learnai" --out=$BACKUP_DIR/mongo_$DATE
-
-# 上传到对象存储
-aws s3 sync $BACKUP_DIR s3://learnai-backups/
-
-# 清理旧备份
-find $BACKUP_DIR -type f -mtime +30 -delete
-```
-
-### 10.3 恢复流程
-
-```bash
-# 恢复PostgreSQL
-gunzip -c postgres_20260403_020000.sql.gz | psql -U learnai -h postgres-primary learnai
-
-# 恢复Redis
-cp redis_20260403_020000.rdb /var/lib/redis/dump.rdb
-systemctl restart redis
-
-# 恢复MongoDB
-mongorestore --uri="mongodb://learnai:learnai123@mongodb-cluster:27017/learnai" mongo_20260403_020000/
-```
-
-## 十一、灾难恢复
-
-### 11.1 RTO/RPO目标
-
-| 组件 | RTO（恢复时间） | RPO（数据丢失） |
-|------|----------------|----------------|
-| 应用服务 | 15分钟 | 无 |
-| 数据库 | 1小时 | 15分钟 |
-| 缓存 | 5分钟 | 可能丢失 |
-| 消息队列 | 30分钟 | 可能丢失 |
-
-### 11.2 灾难恢复流程
-
-```
-1. 检测到灾难
-2. 启动应急预案
-3. 切换到备用数据中心
-4. 恢复数据
-5. 启动应用服务
-6. 验证服务可用性
-7. 通知相关人员
-8. 事后复盘
-```
-
-## 十二、安全配置
-
-### 12.1 网络安全
-
-```yaml
-# network-policy.yaml
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: deny-all
-  namespace: learnai
-spec:
-  podSelector: {}
-  policyTypes:
-    - Ingress
-    - Egress
-  ingress: []
-  egress: []
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-ingress
-  namespace: learnai
-spec:
-  podSelector:
-    matchLabels:
-      app: ingress
-  ingress:
-    - from:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-      ports:
-        - protocol: TCP
-          port: 80
-        - protocol: TCP
-          port: 443
-```
 
-### 12.2 安全扫描
+## 二、当前实施阶段部署目标
 
-```yaml
-# trivy-scan.yaml
-name: Security Scan
+### 2.1 当前阶段必须支持
 
-on:
-  schedule:
-    - cron: '0 2 * * *'
+- Flutter 前端本地运行
+- 本地 FastAPI 后端运行
+- 本地数据库初始化
+- 前后端联调
+- 本地自动化测试
+- Web 和移动端基础验证
 
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'ghcr.io/learnai/backend:latest'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-      
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
-```
+### 2.2 当前阶段不要求
 
-## 十三、附录
+- K8s 集群
+- 服务网格
+- 多区域部署
+- 正式监控平台
+- 生产级高可用拓扑
+- 云端推送与异步任务平台
 
-### 13.1 常用命令
+---
 
-```bash
-# Kubernetes
-kubectl get pods -n learnai
-kubectl get services -n learnai
-kubectl logs -f <pod-name> -n learnai
-kubectl describe pod <pod-name> -n learnai
-kubectl exec -it <pod-name> -n learnai -- /bin/bash
-kubectl scale deployment <deployment> --replicas=5 -n learnai
+## 三、部署环境划分
 
-# Helm
-helm list -n learnai
-helm upgrade learnai ./learnai-chart -n learnai
-helm rollback learnai
-helm uninstall learnai -n learnai
-
-# 数据库
-psql -h postgres-primary -U learnai -d learnai
-redis-cli -h redis-cluster
-mongosh "mongodb://learnai:learnai123@mongodb-cluster:27017/learnai"
-```
-
-### 13.2 问题排查清单
-
-- [ ] 检查Pod状态
-- [ ] 查看Pod日志
-- [ ] 检查服务状态
-- [ ] 检查数据库连接
-- [ ] 检查Redis连接
-- [ ] 检查网络策略
-- [ ] 检查资源使用
-- [ ] 检查告警信息
-
-### 13.3 联系人
-
-| 角色 | 姓名 | 联系方式 |
+| 环境 | 用途 | 部署方式 |
 |------|------|---------|
-| 运维负责人 | - | - |
-| DBA | - | - |
-| 安全负责人 | - | - |
+| 本地开发环境 | 日常开发 | Flutter + 本地 FastAPI + SQLite |
+| 本地集成环境 | 功能联调与回归测试 | Flutter + 本地 FastAPI + SQLite / 可选 Docker |
+| 预发布环境 | 未来迁移验证 | CloudBase 预发布环境 |
+| 生产环境 | 正式服务 | CloudBase 生产环境 |
+
+---
+
+## 四、当前阶段技术栈
+
+| 组件 | 技术 | 说明 |
+|------|------|------|
+| 前端 | Flutter | 运行 iOS / Android / Web |
+| 状态管理 | Riverpod | 维护页面与会话状态 |
+| 后端 | FastAPI | 提供学习闭环 API |
+| 数据库 | SQLite | 当前主数据库 |
+| 可选本地容器 | Docker Compose | 用于统一本地依赖与脚本 |
+| HTTP 客户端 | Dio | Flutter 调用后端 API |
+
+---
+
+## 五、当前实施阶段架构拓扑
+
+```text
+Flutter App
+  ├─ Home / Roadmap / Review / Chat / Profile
+  ├─ Local Cache
+  └─ API Client
+            ↓
+      Local FastAPI
+  ├─ Learning Goal APIs
+  ├─ Roadmap APIs
+  ├─ Session APIs
+  ├─ Review APIs
+  └─ AI Provider Adapter
+            ↓
+          SQLite
+```
+
+---
+
+## 六、本地部署要求
+
+### 6.1 开发机器要求
+
+| 项目 | 建议 |
+|------|------|
+| 操作系统 | macOS / Linux |
+| Python | 3.11+ |
+| Flutter | 3.41+ |
+| Dart | 3.11+ |
+| 可选 | Docker 24+ |
+
+### 6.2 本地目录原则
+
+- 前端项目与后端项目分目录管理
+- 环境变量使用本地 `.env` 或等效方案
+- 数据库文件不应直接提交到仓库
+- 本地启动方式应能在 5 分钟内完成
+
+---
+
+## 七、当前阶段启动流程
+
+### 7.1 启动顺序
+
+1. 启动本地 FastAPI
+2. 初始化本地数据库
+3. 运行 Flutter 前端
+4. 连接本地 API 进行联调
+
+### 7.2 目标状态
+
+当前阶段启动完成后，开发者应能：
+
+- 打开 `Home`
+- 创建学习目标
+- 生成并确认路线
+- 进入学习会话
+- 完成一轮复习任务
+- 刷新或重启后恢复状态
+
+---
+
+## 八、当前阶段配置要求
+
+### 8.1 前端配置
+
+建议前端配置项至少包含：
+
+- `API_BASE_URL`
+- `APP_ENV`
+- `ENABLE_DEBUG_LOGS`
+- `ENABLE_MOCK_AI` 或等效开关
+
+### 8.2 后端配置
+
+建议后端配置项至少包含：
+
+- `APP_ENV`
+- `DATABASE_URL`
+- `AI_PROVIDER`
+- `AI_TIMEOUT_SECONDS`
+- `LOG_LEVEL`
+
+### 8.3 当前阶段默认值
+
+- 本地 API 地址默认指向本机
+- 数据库默认使用 SQLite 文件
+- AI Provider 默认允许本地可替换实现
+
+---
+
+## 九、联调与回归要求
+
+### 9.1 联调必须覆盖
+
+- `Home -> 开始学习 -> Chat`
+- `Roadmap -> 确认路线 -> 开始学习`
+- `Review -> 完成任务 -> 更新状态`
+- `Profile -> 修改设置 -> 保持配置`
+
+### 9.2 回归最低要求
+
+- `flutter analyze`
+- `flutter test`
+- 后端基础单元测试
+- 后端主 API 的冒烟测试
+
+---
+
+## 十、当前阶段运行与排错策略
+
+### 10.1 当前阶段优先排查顺序
+
+1. 前端运行时异常
+2. API 参数与返回结构错误
+3. 数据库读写失败
+4. 会话状态错乱
+5. AI Provider 结果异常
+
+### 10.2 当前阶段排错原则
+
+- 问题先在本地复现
+- 优先排除数据结构与接口语义问题
+- 不用云端配置来掩盖本地架构问题
+
+---
+
+## 十一、目标生产阶段部署
+
+### 11.1 目标生产拓扑
+
+```text
+Flutter App
+      ↓
+CloudBase Run (FastAPI)
+      ↓
+CloudBase MySQL / 文档数据库 / 存储
+      ↓
+CloudBase 云函数 / AI 能力
+```
+
+### 11.2 目标生产职责划分
+
+- `CloudBase Run`：主业务 API、同步 API、AI 编排
+- `CloudBase 云函数`：定时任务、通知、批量统计、异步任务
+- `CloudBase 数据层`：结构化与文档型数据持久化
+- `CloudBase 存储/CDN`：文件资源和静态资源分发
+
+---
+
+## 十二、迁移步骤
+
+### 12.1 迁移前提
+
+迁移到 CloudBase 前，必须先满足：
+
+- API 语义稳定
+- 领域模型稳定
+- 本地数据库模型稳定
+- 前端不再依赖 mock 数据
+- 学习闭环 MVP 已跑通
+
+### 12.2 推荐迁移顺序
+
+1. 保持前端不变
+2. 将 FastAPI 从本地部署切换到 CloudBase Run
+3. 将本地主库映射到 CloudBase 数据层
+4. 将 AI Provider 替换为 CloudBase AI 实现
+5. 最后再补云同步、通知和多设备恢复
+
+---
+
+## 十三、风险与回滚
+
+### 13.1 当前阶段主要风险
+
+| 风险 | 影响 | 应对 |
+|------|------|------|
+| 本地前后端接口不稳定 | 高 | 先稳定 P0 API，再扩展 |
+| 数据库模型频繁变动 | 高 | 先收敛 MVP 字段 |
+| 前端继续依赖 mock | 高 | 以本地 FastAPI 替换 mock 作为下一阶段重点 |
+| AI 输出不稳定 | 中 | 保留降级模式与可替换 Provider |
+
+### 13.2 迁移阶段主要风险
+
+| 风险 | 影响 | 应对 |
+|------|------|------|
+| 本地实现和云端实现脱节 | 高 | 统一 API 与领域模型 |
+| 数据迁移失败 | 高 | 先做映射表和灰度迁移 |
+| 云端成本失控 | 中 | 先在本地验证流量与调用模式 |
+
+### 13.3 回滚原则
+
+- 当前阶段任何关键功能异常，优先回退到本地稳定版本
+- 迁移阶段如云端验证失败，优先回退到本地后端实现
+- 不允许在学习闭环未稳定前直接切走本地可运行方案
+
+---
+
+## 十四、推荐结论
+
+当前部署策略应为：
+
+- **现在**：本地优先部署，先完成开发、联调和闭环验证
+- **以后**：在接口和数据模型稳定后迁移到 CloudBase
+
+这能保证我们先做出一个真正能测试、能排错、能验证的学习应用，再进入云端部署与同步阶段。
