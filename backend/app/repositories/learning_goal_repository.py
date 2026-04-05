@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 from app.db import get_connection
@@ -68,3 +70,29 @@ class LearningGoalRepository:
             connection.commit()
 
         return learning_goal
+
+    def get_by_id(self, learning_goal_id: str) -> LearningGoal | None:
+        self.ensure_tables()
+        with get_connection(self.database_path) as connection:
+            row = connection.execute(
+                "SELECT * FROM learning_goals WHERE id = ?",
+                (learning_goal_id,),
+            ).fetchone()
+
+        if row is None:
+            return None
+
+        return LearningGoal(
+            id=row["id"],
+            topic=row["topic"],
+            target_outcome=row["target_outcome"],
+            current_level=row["current_level"],
+            study_pace=row["study_pace"],
+            evaluation_preference=bool(row["evaluation_preference"]),
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            version=row["version"],
+            status=row["status"],
+            source=row["source"],
+            sync_status=row["sync_status"],
+        )
