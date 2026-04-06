@@ -68,6 +68,16 @@ void main() {
     expect(nextState.messages.last.role, ChatMessageRole.coach);
     expect(nextState.helperFeedbackTitle, 'Reflection captured');
   });
+
+  test('repository returns generated review count after completing a session', () async {
+    final repository = LearningRepository(api: _FakeLearningApi.ready());
+
+    final generatedReviewCount = await repository.completeLearningSession(
+      sessionId: 'session-1',
+    );
+
+    expect(generatedReviewCount, 1);
+  });
 }
 
 class _FakeLearningApi implements LearningApi {

@@ -15,7 +15,14 @@ import '../../learning/presentation/missing_learning_plan_state.dart';
 import '../application/review_queue_provider.dart';
 
 class ReviewScreen extends ConsumerWidget {
-  const ReviewScreen({super.key});
+  const ReviewScreen({
+    super.key,
+    this.showSessionWrapUpBanner = false,
+    this.generatedReviewCount,
+  });
+
+  final bool showSessionWrapUpBanner;
+  final int? generatedReviewCount;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -75,6 +82,19 @@ class ReviewScreen extends ConsumerWidget {
             zh: '这个队列按遗忘风险和概念不稳程度排序。优先完成前面的项目，会明显提升你下一轮主学习的质量。',
           ),
         ),
+        if (showSessionWrapUpBanner) ...<Widget>[
+          const SizedBox(height: 16),
+          StatusMessageCard(
+            title: copy.t(en: 'Session wrapped up', zh: '本轮学习已收束'),
+            body: copy.t(
+              en:
+                  'You closed the main inquiry and generated ${generatedReviewCount ?? queue.dueToday.length} review tasks to stabilize what you just learned.',
+              zh:
+                  '你已经完成了这一轮主学习，并生成了 ${generatedReviewCount ?? queue.dueToday.length} 个复习任务，用来稳住刚学到的内容。',
+            ),
+            tone: StatusMessageTone.success,
+          ),
+        ],
         const SizedBox(height: 16),
         _QueueSection(
           title: copy.t(en: 'Due today', zh: '今天必须复习'),

@@ -55,9 +55,16 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/review',
           pageBuilder: (BuildContext context, GoRouterState state) {
+            final generatedReviewCount = int.tryParse(
+              state.uri.queryParameters['generated'] ?? '',
+            );
             return buildAppPage<void>(
               key: state.pageKey,
-              child: const ReviewScreen(),
+              child: ReviewScreen(
+                showSessionWrapUpBanner:
+                    state.uri.queryParameters['source'] == 'session-complete',
+                generatedReviewCount: generatedReviewCount,
+              ),
             );
           },
         ),

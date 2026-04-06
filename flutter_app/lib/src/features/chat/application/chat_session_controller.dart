@@ -90,4 +90,15 @@ class ChatSessionController extends AsyncNotifier<ChatSessionState> {
       ref.read(learningRepositoryProvider).markStillConfused(currentState),
     );
   }
+
+  Future<int> completeSession() async {
+    final String? sessionId = _sessionId;
+    if (sessionId == null) {
+      return 0;
+    }
+
+    return ref
+        .read(learningRepositoryProvider)
+        .completeLearningSession(sessionId: sessionId);
+  }
 }

@@ -280,6 +280,15 @@ class LearningRepository {
     await api.confirmRoadmap(roadmapId);
   }
 
+  Future<int> completeLearningSession({
+    required String sessionId,
+  }) async {
+    final response = await api.completeSession(sessionId);
+    final List<dynamic> generatedReviewTasks =
+        response['generated_review_tasks'] as List<dynamic>? ?? <dynamic>[];
+    return generatedReviewTasks.length;
+  }
+
   Future<ReviewQueueState> completeReview({
     required ReviewQueueState currentState,
     required String reviewTaskId,

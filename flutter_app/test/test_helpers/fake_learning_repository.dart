@@ -13,7 +13,7 @@ class FakeLearningRepository extends LearningRepository {
   FakeLearningRepository({
     this.homeDashboardState = mockHomeDashboardState,
     this.roadmapProgressState = mockRoadmapProgressState,
-    this.reviewQueueState = mockReviewQueueState,
+    ReviewQueueState reviewQueueState = mockReviewQueueState,
     this.roadmapDraft = const LearningRoadmapDraft(
       roadmapId: 'roadmap-1',
       title: 'Linear Algebra',
@@ -35,14 +35,16 @@ class FakeLearningRepository extends LearningRepository {
               sessionId: 'session-1',
               state: mockChatSessionState,
             ),
+       _reviewQueueState = reviewQueueState,
        super(api: NoopLearningApi());
 
   final HomeDashboardState homeDashboardState;
   final RoadmapProgressState roadmapProgressState;
-  final ReviewQueueState reviewQueueState;
+  ReviewQueueState _reviewQueueState;
   final LearningRoadmapDraft roadmapDraft;
   final LoadedChatSession loadedChatSession;
   String? confirmedRoadmapId;
+  String? completedSessionId;
 
   @override
   Future<HomeDashboardState> loadHomeDashboard() async => homeDashboardState;
@@ -126,7 +128,36 @@ class FakeLearningRepository extends LearningRepository {
   }
 
   @override
-  Future<ReviewQueueState> loadReviewQueue() async => reviewQueueState;
+  Future<int> completeLearningSession({
+    required String sessionId,
+  }) async {
+    completedSessionId = sessionId;
+    _reviewQueueState = _reviewQueueState.copyWith(
+      dueToday: <ReviewQueueItem>[
+        const ReviewQueueItem(
+          id: 'generated-review-1',
+          title: 'Transfer the idea once more',
+          detail: 'Use the just-finished concept in one fresh scenario.',
+          reason: 'Generated from the session you just wrapped up.',
+          dueLabel: 'Due now',
+          route: '/review/quiz',
+        ),
+        const ReviewQueueItem(
+          id: 'generated-review-2',
+          title: 'Explain the concept from memory',
+          detail: 'Restate the core idea and add one concrete example.',
+          reason: 'Generated from the session you just wrapped up.',
+          dueLabel: 'Today',
+          route: '/review/mistakes',
+        ),
+        ..._reviewQueueState.dueToday,
+      ],
+    );
+    return 2;
+  }
+
+  @override
+  Future<ReviewQueueState> loadReviewQueue() async => _reviewQueueState;
 
   @override
   Future<ReviewQueueState> completeReview({

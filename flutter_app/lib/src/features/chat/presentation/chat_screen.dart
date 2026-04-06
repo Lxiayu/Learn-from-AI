@@ -12,8 +12,11 @@ import '../../../shared/widgets/progress_badge.dart';
 import '../../../shared/widgets/section_card.dart';
 import '../../../shared/widgets/status_message_card.dart';
 import '../../../shared/widgets/task_stage_stepper.dart';
+import '../../home/application/home_dashboard_provider.dart';
 import '../../learning/data/learning_repository.dart';
 import '../../learning/presentation/missing_learning_plan_state.dart';
+import '../../review/application/review_queue_provider.dart';
+import '../../roadmap/application/roadmap_progress_provider.dart';
 import '../application/chat_session_controller.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -271,6 +274,61 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ),
+        if (session.currentStage == ChatPromptStage.transfer) ...<Widget>[
+          const SizedBox(height: 16),
+          SectionCard(
+            title: copy.t(en: 'Wrap up this session', zh: '收束这一轮学习'),
+            subtitle: copy.t(
+              en:
+                  'You are in the transfer stage. Finish this block to generate spaced reviews and move into reinforcement.',
+              zh: '你已经进入迁移阶段。完成这一轮后，系统会生成间隔复习任务并带你进入强化阶段。',
+            ),
+            trailing: ProgressBadge(
+              label: copy.t(en: 'Ready to close', zh: '可以收束'),
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: PrimaryActionButton(
+                label: copy.t(
+                  en: 'Complete this session',
+                  zh: '完成本轮学习',
+                ),
+                onPressed: () async {
+                  final router = GoRouter.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    final generatedReviewCount =
+                        await notifier.completeSession();
+                    ref.invalidate(homeDashboardProvider);
+                    ref.invalidate(roadmapProgressProvider);
+                    ref.invalidate(reviewQueueProvider);
+                    ref.invalidate(chatSessionControllerProvider);
+                    if (!mounted) {
+                      return;
+                    }
+                    router.go(
+                      '/review?source=session-complete&generated=$generatedReviewCount',
+                    );
+                  } catch (error) {
+                    if (!mounted) {
+                      return;
+                    }
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          copy.t(
+                            en: 'We could not complete this session yet. Please try again.',
+                            zh: '暂时无法完成这一轮学习，请再试一次。',
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
           ],
         );
       },
