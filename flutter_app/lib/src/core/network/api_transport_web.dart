@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 
+import 'dart:async';
 import 'dart:html' as html;
 
 import 'api_transport_base.dart';
@@ -30,15 +31,38 @@ class _WebApiTransport implements ApiTransport {
     Map<String, String> headers = const <String, String>{},
     String? body,
   }) async {
-    final request = await html.HttpRequest.request(
-      uri.toString(),
-      method: method,
-      requestHeaders: headers,
-      sendData: body,
-    );
-    return ApiTransportResponse(
-      statusCode: request.status ?? 200,
-      body: request.responseText ?? '',
-    );
+    final request = html.HttpRequest();
+    final completer = Completer<ApiTransportResponse>();
+
+    request
+      ..open(method, uri.toString(), async: true)
+      ..responseType = 'text';
+
+    headers.forEach(request.setRequestHeader);
+
+    request.onLoadEnd.first.then((_) {
+      if (!completer.isCompleted) {
+        completer.complete(
+          ApiTransportResponse(
+            statusCode: request.status ?? 0,
+            body: request.responseText ?? '',
+          ),
+        );
+      }
+    });
+
+    request.onError.first.then((_) {
+      if (!completer.isCompleted) {
+        completer.complete(
+          ApiTransportResponse(
+            statusCode: request.status ?? 0,
+            body: request.responseText ?? '',
+          ),
+        );
+      }
+    });
+
+    request.send(body);
+    return completer.future;
   }
 }
