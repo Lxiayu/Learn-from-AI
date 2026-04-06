@@ -11,6 +11,7 @@ class Settings:
     api_prefix: str
     database_path: Path
     allowed_origins: tuple[str, ...]
+    allowed_origin_regex: str
 
     @property
     def database_url(self) -> str:
@@ -30,4 +31,5 @@ def get_settings() -> Settings:
             "http://localhost:3000",
             "http://127.0.0.1:3000",
         ),
+        allowed_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     )
