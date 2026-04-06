@@ -4,7 +4,15 @@ import '../../../shared/models/home_dashboard_models.dart';
 import '../../../shared/models/review_models.dart';
 import '../../../shared/models/roadmap_models.dart';
 import '../domain/loaded_chat_session.dart';
+import '../domain/learning_goal_setup_models.dart';
 import 'learning_api.dart';
+
+class MissingLearningPlanException implements Exception {
+  const MissingLearningPlanException();
+
+  @override
+  String toString() => 'MissingLearningPlanException';
+}
 
 class LearningRepository {
   LearningRepository({required this.api});
@@ -12,9 +20,8 @@ class LearningRepository {
   final LearningApi api;
 
   Future<HomeDashboardState> loadHomeDashboard() async {
-    await _ensureLearningLoopReady();
-    final roadmap = await api.getCurrentRoadmap();
-    final session = await api.getCurrentSession();
+    final roadmap = await _requireCurrentRoadmap();
+    final session = await _requireCurrentSession();
     final reviews = await api.getTodayReviews();
     final milestones = _milestonesFromRoadmap(roadmap);
     final activeMilestone = milestones.firstWhere(
@@ -89,8 +96,7 @@ class LearningRepository {
   }
 
   Future<RoadmapProgressState> loadRoadmapProgress() async {
-    await _ensureLearningLoopReady();
-    final roadmap = await api.getCurrentRoadmap();
+    final roadmap = await _requireCurrentRoadmap();
 
     final milestones = _milestonesFromRoadmap(roadmap);
     final activeMilestone = milestones.firstWhere(
@@ -121,8 +127,7 @@ class LearningRepository {
   }
 
   Future<LoadedChatSession> loadChatSession() async {
-    await _ensureLearningLoopReady();
-    final session = await api.getCurrentSession();
+    final session = await _requireCurrentSession();
     final taskCard = _taskCard(session);
     final ChatPromptStage stage = _stageFromWire(session['phase'] as String?);
     final currentPrompt =
@@ -234,7 +239,7 @@ class LearningRepository {
   }
 
   Future<ReviewQueueState> loadReviewQueue() async {
-    await _ensureLearningLoopReady();
+    await _requireCurrentRoadmap();
     final response = await api.getTodayReviews();
     final items = _reviewItems(response);
     return ReviewQueueState(
@@ -253,6 +258,26 @@ class LearningRepository {
       upNext: const <ReviewQueueItem>[],
       completedToday: const <ReviewQueueItem>[],
     );
+  }
+
+  Future<LearningRoadmapDraft> createRoadmapDraft(
+    LearningGoalSetupInput input,
+  ) async {
+    final goal = await api.createLearningGoal(
+      topic: input.topic,
+      targetOutcome: input.targetOutcome,
+      currentLevel: input.currentLevel.wireValue,
+      studyPace: input.studyPace.wireValue,
+      evaluationPreference: input.evaluationPreference,
+    );
+    final roadmap = await api.generateRoadmap(
+      learningGoalId: goal['id'] as String,
+    );
+    return _roadmapDraftFromWire(roadmap);
+  }
+
+  Future<void> confirmRoadmapDraft(String roadmapId) async {
+    await api.confirmRoadmap(roadmapId);
   }
 
   Future<ReviewQueueState> completeReview({
@@ -291,28 +316,26 @@ class LearningRepository {
     );
   }
 
-  Future<void> _ensureLearningLoopReady() async {
+  Future<Map<String, dynamic>> _requireCurrentRoadmap() async {
     try {
-      await api.getCurrentRoadmap();
-      return;
+      return await api.getCurrentRoadmap();
     } on ApiException catch (error) {
       if (error.statusCode != 404) {
         rethrow;
       }
+      throw const MissingLearningPlanException();
     }
+  }
 
-    final goal = await api.createLearningGoal(
-      topic: 'Quantum Physics Fundamentals',
-      targetOutcome:
-          'Explain the core concepts, compare nearby ideas, and transfer them into new problems.',
-      currentLevel: 'beginner',
-      studyPace: 'steady',
-      evaluationPreference: false,
-    );
-    final roadmap = await api.generateRoadmap(
-      learningGoalId: goal['id'] as String,
-    );
-    await api.confirmRoadmap(roadmap['id'] as String);
+  Future<Map<String, dynamic>> _requireCurrentSession() async {
+    try {
+      return await api.getCurrentSession();
+    } on ApiException catch (error) {
+      if (error.statusCode != 404) {
+        rethrow;
+      }
+      throw const MissingLearningPlanException();
+    }
   }
 
   List<RoadmapMilestone> _milestonesFromRoadmap(Map<String, dynamic> roadmap) {
@@ -342,6 +365,29 @@ class LearningRepository {
       return title.substring(0, title.length - suffix.length);
     }
     return title;
+  }
+
+  LearningRoadmapDraft _roadmapDraftFromWire(Map<String, dynamic> roadmap) {
+    final List<dynamic> rawStages =
+        roadmap['stages'] as List<dynamic>? ?? <dynamic>[];
+    return LearningRoadmapDraft(
+      roadmapId: roadmap['id'] as String,
+      title: _journeyTitle(roadmap['title'] as String? ?? 'Learning Roadmap'),
+      summary: roadmap['summary'] as String? ??
+          'A structured path tailored to your target outcome.',
+      estimatedDurationMinutes:
+          roadmap['estimated_duration_minutes'] as int? ?? 0,
+      stages: rawStages.map((dynamic rawStage) {
+        final stage = rawStage as Map<String, dynamic>;
+        return LearningRoadmapDraftStage(
+          orderIndex: stage['order_index'] as int? ?? 0,
+          title: stage['title'] as String? ?? 'Stage',
+          objective: stage['objective'] as String? ?? '',
+          completionCriteria: stage['completion_criteria'] as String? ?? '',
+          status: stage['status'] as String? ?? 'locked',
+        );
+      }).toList(),
+    );
   }
 
   String _milestoneTitle(int orderIndex) {

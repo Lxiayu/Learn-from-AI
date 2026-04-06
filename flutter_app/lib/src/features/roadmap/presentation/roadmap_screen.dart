@@ -10,6 +10,8 @@ import '../../../shared/widgets/primary_action_button.dart';
 import '../../../shared/widgets/progress_badge.dart';
 import '../../../shared/widgets/section_card.dart';
 import '../../../shared/widgets/status_message_card.dart';
+import '../../learning/data/learning_repository.dart';
+import '../../learning/presentation/missing_learning_plan_state.dart';
 import '../application/roadmap_progress_provider.dart';
 
 class RoadmapScreen extends ConsumerWidget {
@@ -193,6 +195,9 @@ class RoadmapScreen extends ConsumerWidget {
       ),
       error: (Object error, StackTrace stackTrace) => AppScaffoldShell(
         children: <Widget>[
+          if (error is MissingLearningPlanException) ...<Widget>[
+            const MissingLearningPlanState(),
+          ] else ...<Widget>[
           StatusMessageCard(
             title: copy.t(
               en: 'The roadmap could not load',
@@ -213,6 +218,7 @@ class RoadmapScreen extends ConsumerWidget {
             ),
             child: SelectableText(error.toString()),
           ),
+          ],
         ],
       ),
     );

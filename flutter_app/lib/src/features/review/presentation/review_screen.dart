@@ -10,6 +10,8 @@ import '../../../shared/widgets/empty_state_card.dart';
 import '../../../shared/widgets/progress_badge.dart';
 import '../../../shared/widgets/section_card.dart';
 import '../../../shared/widgets/status_message_card.dart';
+import '../../learning/data/learning_repository.dart';
+import '../../learning/presentation/missing_learning_plan_state.dart';
 import '../application/review_queue_provider.dart';
 
 class ReviewScreen extends ConsumerWidget {
@@ -280,6 +282,9 @@ class ReviewScreen extends ConsumerWidget {
       ),
       error: (Object error, StackTrace stackTrace) => AppScaffoldShell(
         children: <Widget>[
+          if (error is MissingLearningPlanException) ...<Widget>[
+            const MissingLearningPlanState(),
+          ] else ...<Widget>[
           StatusMessageCard(
             title: copy.t(
               en: 'The review queue could not load',
@@ -300,6 +305,7 @@ class ReviewScreen extends ConsumerWidget {
             ),
             child: SelectableText(error.toString()),
           ),
+          ],
         ],
       ),
     );

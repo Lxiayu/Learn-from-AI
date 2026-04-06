@@ -12,6 +12,8 @@ import '../../../shared/widgets/progress_badge.dart';
 import '../../../shared/widgets/section_card.dart';
 import '../../../shared/widgets/status_message_card.dart';
 import '../../../shared/widgets/task_stage_stepper.dart';
+import '../../learning/data/learning_repository.dart';
+import '../../learning/presentation/missing_learning_plan_state.dart';
 import '../application/chat_session_controller.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -289,6 +291,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       error: (Object error, StackTrace stackTrace) => AppScaffoldShell(
         children: <Widget>[
+          if (error is MissingLearningPlanException) ...<Widget>[
+            const MissingLearningPlanState(),
+          ] else ...<Widget>[
           StatusMessageCard(
             title: copy.t(
               en: 'The Socratic session could not load',
@@ -309,6 +314,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             child: SelectableText(error.toString()),
           ),
+          ],
         ],
       ),
     );

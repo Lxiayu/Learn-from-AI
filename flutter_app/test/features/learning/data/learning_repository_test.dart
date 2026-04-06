@@ -3,20 +3,42 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_app/src/core/network/api_client.dart';
 import 'package:flutter_app/src/features/learning/data/learning_api.dart';
 import 'package:flutter_app/src/features/learning/data/learning_repository.dart';
+import 'package:flutter_app/src/features/learning/domain/learning_goal_setup_models.dart';
 import 'package:flutter_app/src/shared/models/chat_session_models.dart';
 
 void main() {
-  test('repository bootstraps demo flow when no current roadmap exists', () async {
+  test('repository throws MissingLearningPlanException when no roadmap exists', () async {
     final api = _FakeLearningApi.missingCurrent();
     final repository = LearningRepository(api: api);
 
-    final dashboard = await repository.loadHomeDashboard();
+    expect(
+      () => repository.loadHomeDashboard(),
+      throwsA(isA<MissingLearningPlanException>()),
+    );
+    expect(api.createLearningGoalCalls, 0);
+    expect(api.generateRoadmapCalls, 0);
+    expect(api.confirmRoadmapCalls, 0);
+  });
+
+  test('repository creates a roadmap draft from learner input', () async {
+    final api = _FakeLearningApi.missingCurrent();
+    final repository = LearningRepository(api: api);
+
+    final draft = await repository.createRoadmapDraft(
+      const LearningGoalSetupInput(
+        topic: 'Linear Algebra',
+        targetOutcome: 'Use vectors and matrices to solve medium problems.',
+        currentLevel: LearningCurrentLevel.beginner,
+        studyPace: LearningStudyPace.steady,
+        evaluationPreference: true,
+      ),
+    );
 
     expect(api.createLearningGoalCalls, 1);
     expect(api.generateRoadmapCalls, 1);
-    expect(api.confirmRoadmapCalls, 1);
-    expect(dashboard.learningTask.route, '/chat');
-    expect(dashboard.reviewTask.badgeLabel, '2 due today');
+    expect(draft.roadmapId, 'roadmap-1');
+    expect(draft.title, 'Quantum Physics Fundamentals');
+    expect(draft.stages, hasLength(3));
   });
 
   test('repository maps roadmap stages into UI milestones', () async {
@@ -64,8 +86,6 @@ class _FakeLearningApi implements LearningApi {
   int createLearningGoalCalls = 0;
   int generateRoadmapCalls = 0;
   int confirmRoadmapCalls = 0;
-
-  bool _bootstrapped = false;
 
   Map<String, dynamic> get _roadmap => <String, dynamic>{
     'id': 'roadmap-1',
@@ -117,6 +137,12 @@ class _FakeLearningApi implements LearningApi {
         'updated_at': '2026-04-05T10:00:00Z',
       },
     ],
+  };
+
+  Map<String, dynamic> get _draftRoadmap => <String, dynamic>{
+    ..._roadmap,
+    'status': 'draft',
+    'current_stage_index': 0,
   };
 
   Map<String, dynamic> get _session => <String, dynamic>{
@@ -172,7 +198,6 @@ class _FakeLearningApi implements LearningApi {
   @override
   Future<Map<String, dynamic>> confirmRoadmap(String roadmapId) async {
     confirmRoadmapCalls += 1;
-    _bootstrapped = true;
     return _roadmap;
   }
 
@@ -200,12 +225,12 @@ class _FakeLearningApi implements LearningApi {
     required String learningGoalId,
   }) async {
     generateRoadmapCalls += 1;
-    return <String, dynamic>{'id': 'roadmap-1'};
+    return _draftRoadmap;
   }
 
   @override
   Future<Map<String, dynamic>> getCurrentRoadmap() async {
-    if (startMissingCurrent && !_bootstrapped) {
+    if (startMissingCurrent) {
       throw const ApiException(statusCode: 404, message: 'active_roadmap_not_found');
     }
     return _roadmap;
@@ -213,7 +238,7 @@ class _FakeLearningApi implements LearningApi {
 
   @override
   Future<Map<String, dynamic>> getCurrentSession() async {
-    if (startMissingCurrent && !_bootstrapped) {
+    if (startMissingCurrent) {
       throw const ApiException(statusCode: 404, message: 'active_roadmap_not_found');
     }
     return _session;

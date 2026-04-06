@@ -1,5 +1,6 @@
 import 'package:flutter_app/src/features/learning/data/learning_repository.dart';
 import 'package:flutter_app/src/features/learning/domain/loaded_chat_session.dart';
+import 'package:flutter_app/src/features/learning/domain/learning_goal_setup_models.dart';
 import 'package:flutter_app/src/shared/mock/mock_learning_data.dart';
 import 'package:flutter_app/src/shared/models/chat_session_models.dart';
 import 'package:flutter_app/src/shared/models/home_dashboard_models.dart';
@@ -13,6 +14,21 @@ class FakeLearningRepository extends LearningRepository {
     this.homeDashboardState = mockHomeDashboardState,
     this.roadmapProgressState = mockRoadmapProgressState,
     this.reviewQueueState = mockReviewQueueState,
+    this.roadmapDraft = const LearningRoadmapDraft(
+      roadmapId: 'roadmap-1',
+      title: 'Linear Algebra',
+      summary: 'A focused path from vectors to matrices.',
+      estimatedDurationMinutes: 360,
+      stages: <LearningRoadmapDraftStage>[
+        LearningRoadmapDraftStage(
+          orderIndex: 1,
+          title: 'Core concepts',
+          objective: 'Understand vectors and spans.',
+          completionCriteria: 'Explain vectors with one concrete example.',
+          status: 'available',
+        ),
+      ],
+    ),
     LoadedChatSession? loadedChatSession,
   }) : loadedChatSession = loadedChatSession ??
             const LoadedChatSession(
@@ -24,10 +40,22 @@ class FakeLearningRepository extends LearningRepository {
   final HomeDashboardState homeDashboardState;
   final RoadmapProgressState roadmapProgressState;
   final ReviewQueueState reviewQueueState;
+  final LearningRoadmapDraft roadmapDraft;
   final LoadedChatSession loadedChatSession;
+  String? confirmedRoadmapId;
 
   @override
   Future<HomeDashboardState> loadHomeDashboard() async => homeDashboardState;
+
+  @override
+  Future<LearningRoadmapDraft> createRoadmapDraft(
+    LearningGoalSetupInput input,
+  ) async => roadmapDraft;
+
+  @override
+  Future<void> confirmRoadmapDraft(String roadmapId) async {
+    confirmedRoadmapId = roadmapId;
+  }
 
   @override
   Future<RoadmapProgressState> loadRoadmapProgress() async =>
